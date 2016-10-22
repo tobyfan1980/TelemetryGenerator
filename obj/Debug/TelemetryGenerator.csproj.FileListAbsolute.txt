@@ -1,0 +1,6 @@
+c:\users\toby_\documents\visual studio 2015\Projects\TelemetryGenerator\TelemetryGenerator\bin\Debug\TelemetryGenerator.exe.config
+c:\users\toby_\documents\visual studio 2015\Projects\TelemetryGenerator\TelemetryGenerator\bin\Debug\TelemetryGenerator.exe
+c:\users\toby_\documents\visual studio 2015\Projects\TelemetryGenerator\TelemetryGenerator\bin\Debug\TelemetryGenerator.pdb
+c:\users\toby_\documents\visual studio 2015\Projects\TelemetryGenerator\TelemetryGenerator\obj\Debug\TelemetryGenerator.csprojResolveAssemblyReference.cache
+c:\users\toby_\documents\visual studio 2015\Projects\TelemetryGenerator\TelemetryGenerator\obj\Debug\TelemetryGenerator.exe
+c:\users\toby_\documents\visual studio 2015\Projects\TelemetryGenerator\TelemetryGenerator\obj\Debug\TelemetryGenerator.pdb
