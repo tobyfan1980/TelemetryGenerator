@@ -23,16 +23,20 @@ namespace TelemetryGenerator
         private int _yellow_alert_count = 0;
         private int _red_alert_count = 0;
 
+        private float _lower_bound;
+        private float _upper_bound;
+
         private int _total_event = 0;
         public DataGenerator(float standard, float yellow_low, float yellow_high, 
-            float red_low, float red_high)
+            float red_low, float red_high, float lower_bound, float upper_bound)
         {
             this._standard = standard;
             this._yellow_low = yellow_low;
             this._yellow_high = yellow_high;
             this._red_low = red_low;
             this._red_high = red_high;
-
+            this._lower_bound = Math.Min(yellow_low, lower_bound);
+            this._upper_bound = Math.Max(yellow_high, upper_bound);
         }
 
         public void generate(DateTime start_time, DateTime end_time, int interval_sec)
@@ -42,9 +46,10 @@ namespace TelemetryGenerator
 
         }
 
-        public ReportData generate(int count, float start_value, float yellow_prob, float red_prob)
+        public ReportData generate(int count, float start_value, float yellow_prob, float red_prob, int alert_direction)
         {
-            Random rd = new Random();
+            int seed = (int)DateTime.Now.Ticks;
+            Random rd = new Random(seed);
             float v = start_value;
 
             int total_yellow_count = (int)(count * yellow_prob);
@@ -103,11 +108,22 @@ namespace TelemetryGenerator
             for(int i=0; i<total_yellow_count; i++)
             {
                 float yellow_alert_value;
-                if (telemetries[yellow_alert_time[i]] <= _standard)
+                if (alert_direction == 0) //both low and high
+                {
+                    if (telemetries[yellow_alert_time[i]] <= _standard)
+                    {
+                        yellow_alert_value = this._yellow_low + (_red_low - _yellow_low) * (float)rd.NextDouble();
+                    }
+                    else
+                    {
+                        yellow_alert_value = this._yellow_high + (_red_high - _yellow_high) * (float)rd.NextDouble();
+                    }
+                }
+                else if(alert_direction < 0) // only low alert
                 {
                     yellow_alert_value = this._yellow_low + (_red_low - _yellow_low) * (float)rd.NextDouble();
                 }
-                else
+                else // only high alert
                 {
                     yellow_alert_value = this._yellow_high + (_red_high - _yellow_high) * (float)rd.NextDouble();
                 }
@@ -145,64 +161,10 @@ namespace TelemetryGenerator
 
             return rdata;
         }
-        /*
-
-        private float filter_result_by_yellow_alert_count(float new_value)
-        {
-            
-            if (_yellow_alert_count >= _max_yellow_alert_count)
-            {
-                if (new_value <= _yellow_low)
-                {
-                    new_value = _yellow_low + (_standard - _yellow_low) * 0.2;
-                }
-                else
-                {
-                    new_value = _yellow_high - (_yellow_high - _standard) * 0.2;
-                }
-                Console.Out.WriteLine("already have {0} yellow alert, reset value to normal at {1}", _yellow_alert_count, new_value);
-
-            }
-            else
-            {
-                _yellow_alert_count++;
-                Console.Out.WriteLine("got an yellow alert {0} at {2}, total {1} alerts", new_value, _yellow_alert_count, _total_event);
-            }
-            
-
-            return new_value;
-
-        }
-
-        private float filter_result_by_red_alert_count(float new_value)
-        {
-            
-            if (_red_alert_count >= _max_red_alert_count)
-            {
-                if (new_value <= _red_low)
-                {
-                    new_value = _red_low + (_standard - _red_low) * 0.2;
-                }
-                else
-                {
-                    new_value = _red_high - (_red_high - _standard) * 0.2;
-                }
-                Console.Out.WriteLine("already have {0} red alert at {2}, reset value to no red at {1}", _red_alert_count, new_value, _total_event);
-
-                new_value = filter_result_by_yellow_alert_count(new_value);
-            }
-            else
-            {
-                _red_alert_count++;
-                Console.Out.WriteLine("got an red alert {0}, total {1} alerts", new_value, _red_alert_count);
-            }
-            
-            return new_value;
-        }
-        */
+      
         private float generateOneStep(float cur_value, Random rd)
         {
-            float max_step_size = (this._standard - this._yellow_low) / 3;
+            float max_step_size = (this._standard - this._lower_bound) / 3;
 
             int sign = 1;
             if (cur_value > _standard)
@@ -212,9 +174,16 @@ namespace TelemetryGenerator
                     sign = -1;
                 }
             }
-            else
+            else if(cur_value < _standard)
             {
                 if(rd.Next() % 5 > 2)
+                {
+                    sign = -1;
+                }
+            }
+            else
+            {
+                if(rd.Next() % 2 == 1)
                 {
                     sign = -1;
                 }
@@ -227,17 +196,16 @@ namespace TelemetryGenerator
 
             //if out of normal range, force to go back
 
-            if (new_value >= this._yellow_high || new_value <= this._yellow_low)
+            
+            if (new_value <= _lower_bound)
             {
-                if (new_value <= _yellow_low)
-                {
-                    new_value = _yellow_low + (_standard - _yellow_low) * 0.2f;
-                }
-                else
-                {
-                    new_value = _yellow_high - (_yellow_high - _standard) * 0.2f;
-                }
+                new_value = _lower_bound + (_standard - _lower_bound) * 0.2f;
             }
+            else if(new_value >= _upper_bound)
+            {
+                new_value = _upper_bound - (_upper_bound - _standard) * 0.2f;
+            }
+            
 
             return new_value;
 

@@ -8,7 +8,7 @@ namespace TelemetryGenerator
 {
     class TelemetryInspect
     {
-        private int _device_id;
+        private int _id;
         private int _device_type;
         private String _inspect_type_name;
         private int _inspect_type_id;
@@ -23,17 +23,22 @@ namespace TelemetryGenerator
         private float _red_low;
         private float _red_high;
 
+        public float lower_bound;
+        public float upper_bound;
+
         // alert 
         private float _yellow_alert_rate;
         private float _red_alert_rate;
 
-        private DataGenerator _data_generator;
-        public TelemetryInspect(int d_id, int d_type, String d_type_name,
+        // alert directions, -1 means only low, 0 means both, 1 means only high
+        private int _alert_direction;
+
+        public TelemetryInspect(int id, int d_type, String d_type_name,
             String i_type_name, int i_type_id, String i_type_code, String i_type_unit,
             float st, float yl, float yh, float rl, float rh,
             float yellow_rate, float red_rate)
         {
-            _device_id = d_id;
+            _id = id;
             _device_type = d_type;
             _device_type_name = d_type_name;
             _inspect_type_name = i_type_name;
@@ -47,15 +52,91 @@ namespace TelemetryGenerator
             _red_high = rh;
             _yellow_alert_rate = yellow_rate;
             _red_alert_rate = red_rate;
+            _alert_direction = 0;
+            if(_yellow_low > standard)
+            {
+                _alert_direction = 1;
+            }
+            else if(_yellow_high < standard)
+            {
+                _alert_direction = -1;
+            }
 
-            _data_generator = new DataGenerator(_standard, _yellow_low, _yellow_high,
-                _red_low, _red_high);
+            lower_bound = yellow_lower_bound;
+            upper_bound = yellow_upper_bound;
 
+            
         }
 
+        public int id
+        {
+            get { return _id; }
+        }
+
+        public int device_type_id
+        {
+            get { return _device_type; }
+        }
+
+        public string device_type_name
+        {
+            get { return _device_type_name; }
+        }
+
+        public int inspect_type_id
+        {
+            get { return _inspect_type_id; }
+        }
+
+        public string inspect_type_code
+        {
+            get { return _inspect_type_code; }
+        }
+        public string inspect_type_name
+        {
+            get { return _inspect_type_name; }
+        }
+
+        public string inspect_type_unit
+        {
+            get { return _inspect_type_unit; }
+        }
+
+        public float standard
+        {
+            get { return _standard; }
+        }
+
+        public float yellow_lower_bound
+        {
+            get { return _yellow_low; }
+        }
+
+        public float yellow_upper_bound
+        {
+            get { return _yellow_high; }
+        }
+
+        public float red_lower_bound
+        {
+            get { return _red_low; }
+        }
+        public float red_upper_bound
+        {
+            get { return _red_high; }
+        }
+
+        public string toString()
+        {
+            return string.Format("Telemetry -- {0}, device: {1}, inspect_type: {2}, name: {3}, unit: {4}, standard: {5}, yellow_low: {6}, yellow_high: {7}, red_low: {8}, red_high: {9} ",
+                id, device_type_id, inspect_type_code, inspect_type_name, inspect_type_unit, standard, yellow_lower_bound, yellow_upper_bound, red_lower_bound, red_upper_bound);
+        }
         public ReportData generateTelemetry(int count)
         {
-            ReportData rdata = _data_generator.generate(count, _standard, _yellow_alert_rate, _red_alert_rate);
+            DataGenerator  data_generator = new DataGenerator(_standard, _yellow_low, _yellow_high,
+                _red_low, _red_high, lower_bound, upper_bound);
+
+            ReportData rdata = data_generator.generate(count, _standard, _yellow_alert_rate, _red_alert_rate, _alert_direction);
 
             return rdata;
         }
