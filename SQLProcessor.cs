@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using QC = System.Data.SqlClient;  // System.Data.dll  
+using System.Data;
 
 namespace TelemetryGenerator
 {
@@ -241,6 +242,92 @@ namespace TelemetryGenerator
 
 
             return device_list;
+        }
+
+        public void WriteOneMonitorResult(long device_id, int device_type_id, int telemetry_id, DateTime event_time, float result)
+        {
+            using (var connection = new QC.SqlConnection(connection_string))
+            {
+                connection.Open();
+                Console.Out.WriteLine("Connected to SQL server");
+
+                QC.SqlParameter parameter;
+                using (var command = new QC.SqlCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandType = System.Data.CommandType.Text;
+                    command.CommandText = @"
+                        Insert into fact_monitor_result
+                            ( device_id, device_type_id, device_telemetry_id, create_time, result)
+                        Values
+                            ( @device_id, @device_type_id, @device_telemetry_id, @create_time, @result
+                             );";
+                    
+                    parameter = new QC.SqlParameter("@device_id", System.Data.SqlDbType.BigInt);
+                    parameter.Value = device_id;
+                    command.Parameters.Add(parameter);
+
+                    parameter = new QC.SqlParameter("@device_type_id", System.Data.SqlDbType.Int);
+                    parameter.Value = device_type_id;
+                    command.Parameters.Add(parameter);
+
+                    parameter = new QC.SqlParameter("@device_telemetry_id", System.Data.SqlDbType.Int);
+                    parameter.Value = telemetry_id;
+                    command.Parameters.Add(parameter);
+
+                    parameter = new QC.SqlParameter("@create_time", System.Data.SqlDbType.DateTime);
+                    parameter.Value = event_time;
+                    command.Parameters.Add(parameter);
+
+                    parameter = new QC.SqlParameter("@result", System.Data.SqlDbType.Float);
+                    parameter.Value = result;
+                    command.Parameters.Add(parameter);
+
+                    try
+                    {
+                        command.ExecuteScalar();
+                        Console.WriteLine("Insert {1} result inspect to DB: {0}", device_id, result.ToString());
+
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Failed to write. err: {0}", e.ToString());
+                    }
+                }
+            }
+        
+    }
+
+        public void WriteReportDateToDB(ReportData report, DateTime start, TimeSpan interval, long device_id, int inspect_type_id)
+        {
+            // use alert index to write all alert data in report data to fact_alert table
+
+            // calculate daily average and write to fact_monitor_result_daily_average
+
+            // if it include today's data, write data to fact_monitor_result table
+        }
+
+        public void WriteDataRowsToSQLTable(string tableName, DataRow[] resultRows)
+        {
+            using (var connection = new QC.SqlConnection(connection_string))
+            {
+                connection.Open();
+
+                using (QC.SqlBulkCopy bulkCopy = new QC.SqlBulkCopy(connection))
+                {
+                    bulkCopy.DestinationTableName = tableName;
+
+                    try
+                    {
+                        bulkCopy.WriteToServer(resultRows);
+                    }catch(Exception e)
+                    {
+                        Console.WriteLine("======!!!failed to write bulk data to table {0}. Error: {1}", 
+                            tableName, e.ToString());
+                    }
+                }
+            }
+               
         }
     }
 }
