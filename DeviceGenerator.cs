@@ -27,6 +27,11 @@ namespace TelemetryGenerator
         public int id;
     }
 
+    struct Company
+    {
+        public string name;
+        public int id;
+    }
     class DeviceGenerator
     {
         private string control_prefix = "intelab-";
@@ -37,6 +42,7 @@ namespace TelemetryGenerator
 
         private List<Floor> floors = new List<Floor>();
         private List<Building> buildings = new List<Building>();
+        private List<Company> companies = new List<Company>();
 
         private List<DateTime> create_dates = new List<DateTime>();
         private List<DateTime> purchase_dates = new List<DateTime>();
@@ -77,6 +83,16 @@ namespace TelemetryGenerator
             //tongfeng.number_by_model = new int[1] { 40 };
             tongfeng.number_by_model = new int[1] { 4 };
             device_types.Add(tongfeng);
+
+            Company c_a = new Company();
+            c_a.name = "newshine";
+            c_a.id = 1;
+            Company c_b = new Company();
+            c_b.name = "ils";
+            c_b.id = 2;
+
+            companies.Add(c_a);
+            companies.Add(c_b);
 
             Building b_a = new Building();
             b_a.name = "A楼";
@@ -149,6 +165,7 @@ namespace TelemetryGenerator
                         string sn = string.Format("{0}{1}", prefix, j);
                         int building_index = rd.Next(buildings.Count);
                         int floor_index = rd.Next(floors.Count);
+                        int company_index = rd.Next(companies.Count);
 
                         int control_online = get_online_status(rd);
                         int battery = this.control_battery_low + rd.Next(control_battery_high - control_battery_low + 1);
@@ -160,6 +177,9 @@ namespace TelemetryGenerator
                         device.model = model_name;
                         device.type_name = dt.name;
                         device.type_id = dt.type_id;
+                        device.company_id = companies[company_index].id;
+                        device.company_name = companies[company_index].name;
+
                         device.building_name = buildings[building_index].name;
                         device.building_id = buildings[building_index].id;
                         device.floor_id = floors[floor_index].id;

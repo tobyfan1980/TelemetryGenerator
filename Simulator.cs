@@ -95,6 +95,7 @@ namespace TelemetryGenerator
 
         public void GenerateMonitorResultPerDevice(DimDevice device, DateTime start, DateTime end, int sample_interval_minutes, int recent_days)
         {
+            Console.WriteLine("generate simulator results for device {0}", device.id);
             foreach (TelemetryInspect teleInspect in telemetry_inspectors)
             {
                 if (teleInspect.device_type_id == device.type_id)
@@ -148,6 +149,7 @@ namespace TelemetryGenerator
             device_id_col.DataType = System.Type.GetType("System.Int64");
             monitor_result_tbl.Columns.Add(device_id_col);
 
+            
             DataColumn device_type_id_col = new DataColumn();
             device_type_id_col.ColumnName = "device_type_id";
             device_type_id_col.DataType = System.Type.GetType("System.Int32");
@@ -170,6 +172,11 @@ namespace TelemetryGenerator
             monitor_result.DataType = System.Type.GetType("System.Double");// ? how to get float datatype
             monitor_result_tbl.Columns.Add(monitor_result);
 
+            DataColumn company_id_col = new DataColumn();
+            company_id_col.ColumnName = "company_id";
+            company_id_col.DataType = System.Type.GetType("System.Int32");
+            monitor_result_tbl.Columns.Add(company_id_col);
+
             return monitor_result_tbl;
         }
 
@@ -184,6 +191,7 @@ namespace TelemetryGenerator
                 DataRow dataRow = monitor_result_tbl.NewRow();
                 dataRow["id"] = 10 + i;
                 dataRow["device_id"] = device.id;
+                dataRow["company_id"] = device.company_id;
                 dataRow["create_time"] = result_time;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_telemetry_id"] = telemetry_inspect.id;
@@ -215,6 +223,7 @@ namespace TelemetryGenerator
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_telemetry_id"] = telemetry_inspect.id;
                 dataRow["result"] = report.data[i];
+                dataRow["company_id"] = device.company_id;
 
                 monitor_result_tbl.Rows.Add(dataRow);
 
@@ -227,10 +236,8 @@ namespace TelemetryGenerator
 
         }
 
-        public void GetAlertDataRowsFromReportData(ReportData report, DimDevice device, TelemetryInspect tele_inspect, DateTime start, int sampling_interval_minutes)
+        private DataTable MakeAlertTable()
         {
-            TimeSpan interval = new TimeSpan(0, 5, 0);
-
             DataTable monitor_alert_tbl = new DataTable("monitor_alert");
 
             DataColumn alert_id_col = new DataColumn();
@@ -238,11 +245,12 @@ namespace TelemetryGenerator
             alert_id_col.AutoIncrement = true;
             alert_id_col.DataType = System.Type.GetType("System.Int64");
             monitor_alert_tbl.Columns.Add(alert_id_col);
-           
+
             DataColumn device_id_col = new DataColumn();
             device_id_col.ColumnName = "device_id";
             device_id_col.DataType = System.Type.GetType("System.Int64");
             monitor_alert_tbl.Columns.Add(device_id_col);
+
 
             DataColumn device_type_id_col = new DataColumn();
             device_type_id_col.ColumnName = "device_type_id";
@@ -268,12 +276,26 @@ namespace TelemetryGenerator
             time_col.ColumnName = "alert_time";
             time_col.DataType = System.Type.GetType("System.DateTime");
             monitor_alert_tbl.Columns.Add(time_col);
-            
+
             DataColumn alert_result_col = new DataColumn();
             alert_result_col.ColumnName = "result";
             alert_result_col.DataType = System.Type.GetType("System.Double");// ? how to get float datatype
             monitor_alert_tbl.Columns.Add(alert_result_col);
 
+            DataColumn company_id_col = new DataColumn();
+            company_id_col.ColumnName = "company_id";
+            company_id_col.AutoIncrement = false;
+            company_id_col.DataType = System.Type.GetType("System.Int32");
+            monitor_alert_tbl.Columns.Add(company_id_col);
+
+            return monitor_alert_tbl;
+        }
+
+        public void GetAlertDataRowsFromReportData(ReportData report, DimDevice device, TelemetryInspect tele_inspect, DateTime start, int sampling_interval_minutes)
+        {
+            TimeSpan interval = new TimeSpan(0, 5, 0);
+            
+            DataTable monitor_alert_tbl = MakeAlertTable();
             DateTime result_time = start;
             for (int i = 0; i < report.yellow_alert_index.Length; i++)
             {
@@ -291,6 +313,8 @@ namespace TelemetryGenerator
                 dataRow["alert_type"] = 1;
                 
                 dataRow["consecutive_alert_count"] = alert_count(report.yellow_alert_index, i);
+                dataRow["company_id"] = device.company_id;
+
                 monitor_alert_tbl.Rows.Add(dataRow);
 
             }
@@ -302,6 +326,7 @@ namespace TelemetryGenerator
 
                 DataRow dataRow = monitor_alert_tbl.NewRow();
                 dataRow["device_id"] = device.id;
+                dataRow["company_id"] = device.company_id;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["alert_time"] = result_time;
                 dataRow["device_telemetry_id"] = tele_inspect.id;
@@ -337,10 +362,8 @@ namespace TelemetryGenerator
             return count;
         }
 
-
-        public void GetTelemetryAverageDataRowsFromReportData(ReportData report, DimDevice device, TelemetryInspect tele_inspect, DateTime start, int sampling_interval_minutes)
+        private DataTable MakeTelemetryAverageTable()
         {
-            
             DataTable monitor_result_avg_tbl = new DataTable("monitor_result");
 
             DataColumn result_id_col = new DataColumn();
@@ -377,6 +400,20 @@ namespace TelemetryGenerator
             monitor_result.DataType = System.Type.GetType("System.Double");// ? how to get float datatype
             monitor_result_avg_tbl.Columns.Add(monitor_result);
 
+
+            DataColumn company_id_col = new DataColumn();
+            company_id_col.ColumnName = "company_id";
+            company_id_col.AutoIncrement = false;
+            company_id_col.DataType = System.Type.GetType("System.Int32");
+            monitor_result_avg_tbl.Columns.Add(company_id_col);
+
+            return monitor_result_avg_tbl;
+        }
+
+        public void GetTelemetryAverageDataRowsFromReportData(ReportData report, DimDevice device, TelemetryInspect tele_inspect, DateTime start, int sampling_interval_minutes)
+        {
+
+            DataTable monitor_result_avg_tbl = MakeTelemetryAverageTable();
             DateTime result_time = start;
 
             TimeSpan one_day = new TimeSpan(24, 0, 0);
@@ -397,6 +434,7 @@ namespace TelemetryGenerator
                     double average = agg_result / daily_samples;
                     DataRow dataRow = monitor_result_avg_tbl.NewRow();
                     dataRow["device_id"] = device.id;
+                    dataRow["company_id"] = device.company_id;
                     dataRow["device_type_id"] = device.type_id;
                     dataRow["device_telemetry_id"] = tele_inspect.id;
                     dataRow["create_date"] = cur_date;
@@ -424,6 +462,7 @@ namespace TelemetryGenerator
                 double average = agg_result / daily_samples;
                 DataRow dataRow = monitor_result_avg_tbl.NewRow();
                 dataRow["device_id"] = device.id;
+                dataRow["company_id"] = device.company_id;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_telemetry_id"] = tele_inspect.id;
                 dataRow["create_date"] = cur_date;

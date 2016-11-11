@@ -18,6 +18,8 @@ namespace TelemetryGenerator
         public int building_id;
         public int floor_id;
         public string floor_name;
+        public int company_id;
+        public string company_name;
 
         public string control;
         public int control_online_status;
