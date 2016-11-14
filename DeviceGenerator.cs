@@ -46,6 +46,7 @@ namespace TelemetryGenerator
 
         private List<DateTime> create_dates = new List<DateTime>();
         private List<DateTime> purchase_dates = new List<DateTime>();
+
         public void initialize()
         {
             DeviceType fridge = new DeviceType();
@@ -54,7 +55,7 @@ namespace TelemetryGenerator
             fridge.sn_prefix_by_model = new string[2] { "Thermo-1-", "Haier-1-" };
             fridge.type_id = 1;
             //fridge.number_by_model = new int[2] { 60, 40};
-            fridge.number_by_model = new int[2] { 6, 4 };
+            fridge.number_by_model = new int[2] { 6 * 2, 4 * 2 };
             device_types.Add(fridge);
 
             DeviceType peiyang = new DeviceType();
@@ -63,7 +64,7 @@ namespace TelemetryGenerator
             peiyang.sn_prefix_by_model = new string[2] { "Thermo-2-", "Binder-2-" };
             peiyang.type_id = 2;
             //peiyang.number_by_model = new int[2] { 25, 30 };
-            peiyang.number_by_model = new int[2] { 2, 3 };
+            peiyang.number_by_model = new int[2] { 2 * 2, 3 * 2 };
             device_types.Add(peiyang);
 
             DeviceType jiejing = new DeviceType();
@@ -72,7 +73,7 @@ namespace TelemetryGenerator
             jiejing.sn_prefix_by_model = new string[1] { "Newshine-3-"};
             jiejing.type_id = 3;
            // jiejing.number_by_model = new int[1] {20 };
-            jiejing.number_by_model = new int[1] { 2 };
+            jiejing.number_by_model = new int[1] { 2 * 2 };
             device_types.Add(jiejing);
 
             DeviceType tongfeng = new DeviceType();
@@ -81,7 +82,7 @@ namespace TelemetryGenerator
             tongfeng.sn_prefix_by_model = new string[1] { "Newshine-4-" };
             tongfeng.type_id = 4;
             //tongfeng.number_by_model = new int[1] { 40 };
-            tongfeng.number_by_model = new int[1] { 4 };
+            tongfeng.number_by_model = new int[1] { 4 * 2 };
             device_types.Add(tongfeng);
 
             Company c_a = new Company();
@@ -124,6 +125,17 @@ namespace TelemetryGenerator
             floors.Add(f_test);
             floors.Add(f_peiyang);
             floors.Add(f_sample);
+
+            Company c_1 = new Company();
+            c_1.id = 1;
+            c_1.name = "能讯环保";
+
+            Company c_2 = new Company();
+            c_2.id = 2;
+            c_2.name = "iLabService";
+
+            companies.Add(c_1);
+            companies.Add(c_2);
 
             create_dates.Add(new DateTime(2016, 7, 16));
             create_dates.Add(new DateTime(2016, 8, 21));
@@ -184,6 +196,9 @@ namespace TelemetryGenerator
                         device.building_id = buildings[building_index].id;
                         device.floor_id = floors[floor_index].id;
                         device.floor_name = floors[floor_index].name;
+                        device.company_id = companies[company_index].id;
+                        device.company_name = companies[company_index].name;
+
                         device.control = string.Format("{0}{1}", this.control_prefix, device_count);
                         device.control_online_status = control_online;
                         device.control_battery_status = battery;

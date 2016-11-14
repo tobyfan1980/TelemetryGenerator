@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data;
 
 namespace TelemetryGenerator
 {
@@ -12,7 +13,6 @@ namespace TelemetryGenerator
         {
             DataGenerator dg = new DataGenerator(50, 45, 55, 40, 60, 45, 55);
             dg.generate(1000, 50, 0.01f, 0.002f, 0);
-
             
         }
 
@@ -22,10 +22,13 @@ namespace TelemetryGenerator
             sim.generateDevices();
         }
 
-        static void testDeviceGeneratorSavor()
+        static void GenerateDeviceAndTelemetry()
         {
             Simulator sim = new Simulator();
+            sim.sql_process = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
+            sim.sql_process.CleanupIntelabDB();
             sim.GenerateAndSaveDevices();
+            sim.SaveTelemetryInspectors();
         }
 
         static void testDeviceRead()
@@ -49,6 +52,7 @@ namespace TelemetryGenerator
         static void testGenerateResultsDB()
         {
             Simulator sim = new Simulator(1.0f/100, 1.0f/500);
+            sim.sql_process = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
             List<DimDevice> device_list = sim.sql_process.readDevices(0, 2);
             // get device type, and for all corresponding inspect type generate report data
             foreach (DimDevice device in device_list)
@@ -61,7 +65,8 @@ namespace TelemetryGenerator
         static void GenerateResultsDB()
         {
             // create simulator with yellow alert rate 0.01 (1 alert per 500 min), red alert rate 0.002
-            Simulator sim = new Simulator(1.0f / 100, 1.0f / 500);
+            Simulator sim = new Simulator(1.0f / 150, 1.0f / 700);
+            sim.sql_process = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
             int skip = 0;
 
             while (true)
@@ -71,7 +76,7 @@ namespace TelemetryGenerator
                 foreach (DimDevice device in device_list)
                 {
                     // generate data will 5 minutes interval and save only latest 2 days telemetry data in fact_monitor_result table
-                    sim.GenerateMonitorResultPerDevice(device, new DateTime(2016, 9, 1), new DateTime(2016, 11, 1), 5, 2);
+                    sim.GenerateMonitorResultPerDevice(device, new DateTime(2016, 8, 1), new DateTime(2016, 11, 20,23,0,0), 5, 2);
                 }
 
                 if(device_list.Count < 10)
@@ -99,56 +104,96 @@ namespace TelemetryGenerator
             //mysqlProc.ReadDevices();
             mysqlProc.ReadDimDevice();
             mysqlProc.ReadDeviceTelemetry();
-            mysqlProc.ReadMonitorResult();
-            mysqlProc.ReadAlert();
+            mysqlProc.ReadMonitorResult(DateTime.Now.Date);
+            mysqlProc.ReadAlert(DateTime.Now.Date);
 
         }
 
+
+        static void InitializeDB()
+        {
+            SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
+            //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
+
+            proc.InitializeIntelabDB();
+        }
+
+        static void CleanupDB()
+        {
+            //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
+            SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
+            proc.CleanupIntelabDB();
+        }
+
+        static void CleanupFactTables()
+        {
+            //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
+            SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
+            proc.CleanupFactTable();
+        }
+
+        
+
         static void TestRunSQLcommand()
         {
-            SQLProcessor proc = new SQLProcessor();
+            SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
+            //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
             string cmd1 = "Alter table fact_monitor_result add company_id int null";
-            string cmdaddcompanyname = "Alter table fact_alert add company_name nvarchar(50) null";
-            string cmdsetcompanyname = "update fact_alert set company_name='science' where company_id=2";
-            string cmdsetcompanyname2 = "update fact_alert set company_name='newshine' where company_id=1";
-
-
-            string cmd2 = "update dim_device set company_id=1 where device_id%2=1";
-
-            string cmdDelete1 = "delete from fact_alert";
-            string cmdDelete2 = "delete from fact_monitor_result";
-            string cmdDelete3 = "delete from fact_monitor_result_daily_average";
-
-            //proc.ExecuteSqlCommandNonQuery(cmdDelete1);
-            //proc.ExecuteSqlCommandNonQuery(cmdDelete3);
-            //proc.ExecuteSqlCommandNonQuery(cmdDelete2);
-            proc.ExecuteSqlCommandNonQuery(cmdsetcompanyname2);
+           
+            //proc.ExecuteSqlCommandNonQuery(cmdsetcompanyname2);
 
             string cmdcount = "select count(*) from fact_alert";
-            string cmdcount2 = "select count(*) as count, company_id from fact_alert group by company_id";
+            string cmdcount2 = "select count(*) as count, device_id from fact_monitor_result group by device_id";
             string cmdcount22 = "select count(*) as count, company_id from fact_monitor_result group by company_id";
             string cmdcount23 = "select count(*) as count, company_id from fact_monitor_result_daily_average group by company_id";
             string cmdcount3 = "select count(*) from dim_device where company_id=1";
 
-            //proc.ExecuteSqlCommandCountByGroup(cmdcount2);
+            proc.ExecuteSqlCommandCountQuery(cmdcount);
+            proc.ExecuteSqlCommandCountQuery(cmdcount2);
+
+            //proc.ExecuteSqlCommandCountByGroup(cmdcount);
 
 
         }
 
+        static void DailySqlTransfer()
+        {
+            SqlDataTransfer sqlTrans = new SqlDataTransfer();
+            sqlTrans.TransferFromMysqlToSqlserver();
+        }
+
         static void Main(string[] args)
         {
-            //testDeviceGeneratorSavor();
+            //GenerateDeviceAndTelemetry();
             //testDeviceRead();
             //testSaveTelemetries();
             //testGenerateResults();
 
             //testGenerateResultsDB();
             //TestWriteMonitorResult();
+
+            //CleanupFactTables();
             //GenerateResultsDB();
 
             //TestMysql();
-            TestRunSQLcommand();
+            //  TestRunSQLcommand();
+            //InitializeDB();
+            //CleanupDB();
 
+            Tuple<long, int> a = new Tuple<long, int>(1, 2);
+            Tuple<long, int> b = new Tuple<long, int>(1, 2);
+
+            if (a.Equals(b))
+            {
+                Console.WriteLine("guessing tuple succeessfully");
+            }
+
+            double c = 2.5555d;
+            float d = (float)c;
+
+
+            CleanupFactTables();
+            DailySqlTransfer();
             Console.Out.WriteLine("finished==============");
             Console.In.ReadLine();
         }

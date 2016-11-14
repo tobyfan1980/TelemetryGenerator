@@ -69,6 +69,10 @@ namespace TelemetryGenerator
 
             // insert alert events
             // generate yellow alert time
+
+            // plan A, divide total time to time slots whose number is the yellow alert count, 
+            // and randomly generate an alert inside each time slot
+            /*
             int yellow_interval = count / total_yellow_count;
             for (int i=0; i< total_yellow_count; i++)
             {
@@ -76,6 +80,32 @@ namespace TelemetryGenerator
                 if (yellow_alert_time[i] > yellow_interval * (i + 1) - 2)
                     yellow_alert_time[i] = yellow_interval * (i + 1) - 2;
             }
+            */
+
+            // plan B, randomly put yellow alerts in the total time period
+            // ensure each yellow alerts not next to each other
+            List<int> yellow_alert_index = new List<int>();
+            for (int i=0; i<total_yellow_count; i++)
+            {
+                while (true)
+                {
+                    int index = rd.Next(count-2);
+                    if (!(yellow_alert_index.Contains(index)
+                       || yellow_alert_index.Contains(index-1) 
+                       || yellow_alert_index.Contains(index+1)))
+                    {
+                        yellow_alert_index.Add(index);
+                        break;
+                    }
+                }
+            }
+
+
+            //yellow_alert_index.Sort();
+
+            yellow_alert_time = yellow_alert_index.ToArray();
+            
+
             // generate red alert time
 
             // get the yellow alert which red alert will associate with

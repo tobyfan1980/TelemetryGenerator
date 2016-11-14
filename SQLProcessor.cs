@@ -10,8 +10,150 @@ namespace TelemetryGenerator
 {
     class SQLProcessor
     {
-        public string connection_string = string.Format("Server=tcp:intelab-db.database.windows.net,1433;Initial Catalog=intelab-db;Persist Security Info=False;User ID={0};Password={1};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
-                "superadmin", "intelab-2016");
+        string db_server;
+        string db_name;
+        string connection_string;
+        public SQLProcessor(string sql_server, string sql_db, string username, string password)
+        {
+            db_server = sql_server;
+            db_name = sql_db;
+            connection_string = string.Format("Server=tcp:{0}.database.windows.net,1433;Initial Catalog={1};Persist Security Info=False;User ID={2};Password={3};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+                db_server, db_name, username, password);
+        }
+
+        public void CleanupIntelabDB()
+        {
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result_daily_average");
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result");
+            ExecuteSqlCommandNonQuery("delete from fact_alert");
+            ExecuteSqlCommandNonQuery("delete from dim_device_telemetry");
+            ExecuteSqlCommandNonQuery("delete from dim_device");
+            ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
+
+        }
+
+        public void CleanupFactTable()
+        {
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result_daily_average");
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result");
+            ExecuteSqlCommandNonQuery("delete from fact_alert");
+            ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
+        }
+
+        public void InitializeIntelabDB()
+        {
+            ExecuteSqlCommandNonQuery("drop table fact_monitor_result_daily_average");
+            ExecuteSqlCommandNonQuery("drop table fact_monitor_result");
+            ExecuteSqlCommandNonQuery("drop table fact_alert");
+            ExecuteSqlCommandNonQuery("drop table fact_alert_daily_sum");
+
+            ExecuteSqlCommandNonQuery("drop table dim_device_telemetry");
+            ExecuteSqlCommandNonQuery("drop table dim_device");
+
+            // create table
+            string create_table_dim_device =
+                @"create table dim_device(
+device_id bigint not null primary key,
+serial_number nvarchar(50),
+device_name nvarchar(255),
+model nvarchar(50),
+type_name nvarchar(50),
+type_id int,
+create_date datetime,
+purchase_date datetime,
+maintain_date datetime,
+maintain_rule nvarchar(255),
+maintain_alert_days int,
+push_type nvarchar(50),
+push_internval int,
+building_id int,
+building_name nvarchar(255),
+floor_id int,
+floor_name nvarchar(255),
+room_id int,
+room_name nvarchar(255),
+control varchar(50),
+control_online_status int,
+control_battery_status int,
+company_id int,
+company_name nvarchar(50)); ";
+
+            string create_table_dim_device_telemetry =
+                @"create table dim_device_telemetry(
+id int not null primary key,
+device_type_name nvarchar(50),
+device_type_id int,
+inspect_type_id int,
+inspect_type_code varchar(10),
+inspect_type_name nvarchar(50),
+inspect_type_unit nvarchar(20),
+standard float,
+yellow_lower_bound float,
+yellow_upper_bound float,
+red_lower_bound float,
+red_upper_bound float); ";
+
+            string create_table_fact_monitor_result =
+                @"create table fact_monitor_result(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+device_telemetry_id int not null foreign key references dim_device_telemetry(id),
+create_time datetime,
+result float,
+company_id int,
+company_name nvarchar(50)); ";
+
+            string create_table_fact_alert =
+                @"create table fact_alert(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+device_telemetry_id int not null foreign key references dim_device_telemetry(id),
+alert_type int,
+consecutive_alert_count int,
+start_time datetime,
+end_time datetime,
+result float,
+company_id int,
+company_name nvarchar(50)); ";
+
+            string create_table_fact_alert_daily_sum =
+                @"create table fact_alert_daily_sum(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+device_telemetry_id int not null foreign key references dim_device_telemetry(id),
+alert_type int,
+alert_count int,
+create_date date,
+result float,
+company_id int,
+company_name nvarchar(50)); ";
+
+            string create_table_fact_monitor_result_daily_average =
+               @"create table fact_monitor_result_daily_average(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+device_telemetry_id int not null foreign key references dim_device_telemetry(id),
+create_date date,
+result float,
+company_id int,
+company_name nvarchar(50)); ";
+
+            ExecuteSqlCommandNonQuery(create_table_dim_device);
+            ExecuteSqlCommandNonQuery(create_table_dim_device_telemetry);
+            ExecuteSqlCommandNonQuery(create_table_fact_monitor_result);
+            ExecuteSqlCommandNonQuery(create_table_fact_alert);
+            ExecuteSqlCommandNonQuery(create_table_fact_monitor_result_daily_average);
+            ExecuteSqlCommandNonQuery(create_table_fact_alert_daily_sum);
+        }
+
 
         public void ExecuteSqlCommandNonQuery(string cmdStr)
         {
@@ -37,7 +179,7 @@ namespace TelemetryGenerator
         }
 
 
-        public void ExecuteSqlCommandCountQuery(string cmdStr)
+        public Int64 ExecuteSqlCommandCountQuery(string cmdStr)
         {
             Console.WriteLine("Executing SQL command {0}", cmdStr);
             using (var connection = new QC.SqlConnection(connection_string))
@@ -51,13 +193,15 @@ namespace TelemetryGenerator
                         command.CommandType = System.Data.CommandType.Text;
                         command.CommandText = cmdStr;
                         string returnValue = command.ExecuteScalar().ToString();
-                        Console.WriteLine("sql command result is {0}", returnValue);
+                        Console.WriteLine("sql command count result is {0}", returnValue);
+                        return Int64.Parse(returnValue);
                     }
 
                 }
                 catch (Exception expt)
                 {
                     Console.WriteLine("executing sql cmd failed: {0}", expt.ToString());
+                    return -1;
                 }
             }
         }
@@ -112,6 +256,52 @@ namespace TelemetryGenerator
             }
         }
 
+        public void MergeDevicesToDB(DataRow[] devices_to_merge)
+        {
+            
+            List<DataRow> devices_to_insert = new List<DataRow>();
+            using (var connection = new QC.SqlConnection(connection_string))
+            {
+                connection.Open();
+                Console.Out.WriteLine("Connected to SQL server");
+                
+                foreach(DataRow device in devices_to_merge)
+                {
+                    //filter out the existing ones
+                    Int64 count = ExecuteSqlCommandCountQuery(string.Format("select count(*) from dim_device where device_id={0}", device["device_id"]));
+                    if (count == 0)
+                    {
+                        devices_to_insert.Add(device);
+                    }
+                }
+
+            }
+            WriteDataRowsToSQLTable("dim_device", devices_to_insert.ToArray());
+        }
+
+        public void MergeDeviceTelemetryToDB(DataRow[] telemetry_to_merge)
+        {
+
+            List<DataRow> inspect_telemetry_to_insert = new List<DataRow>();
+            using (var connection = new QC.SqlConnection(connection_string))
+            {
+                connection.Open();
+                Console.Out.WriteLine("Connected to SQL server");
+
+                foreach (DataRow telemetry in telemetry_to_merge)
+                {
+                    //filter out the existing ones
+                    Int64 count = ExecuteSqlCommandCountQuery(string.Format("select count(*) from dim_device_telemetry where id={0}", telemetry["id"]));
+                    if (count == 0)
+                    {
+                        inspect_telemetry_to_insert.Add(telemetry);
+                    }
+                }
+
+            }
+            WriteDataRowsToSQLTable("dim_device_telemetry", inspect_telemetry_to_insert.ToArray());
+        }
+
         public void WriteOneDevice(QC.SqlConnection connection, DimDevice device)
         {
             QC.SqlParameter parameter;
@@ -121,10 +311,10 @@ namespace TelemetryGenerator
                 command.CommandType = System.Data.CommandType.Text;
                 command.CommandText = @"
                     Insert into dim_device
-                        (device_id, company_id, serial_number, device_name, model, type_name, type_id, create_date, purchase_date, 
+                        (device_id, company_id, company_name, serial_number, device_name, model, type_name, type_id, create_date, purchase_date, 
                          building_id, building_name, floor_id, floor_name, control, control_online_status, control_battery_status)
                     Values
-                        (@device_id, @company_id, @serial_number, @device_name, @model, @type_name, @type_id, @create_date, @purchase_date, 
+                        (@device_id, @company_id, @company_name, @serial_number, @device_name, @model, @type_name, @type_id, @create_date, @purchase_date, 
                          @building_id, @building_name, @floor_id, @floor_name, @control, @control_online_status, @control_battery_status
                          );";
 
@@ -134,6 +324,10 @@ namespace TelemetryGenerator
 
                 parameter = new QC.SqlParameter("@company_id", System.Data.SqlDbType.Int);
                 parameter.Value = device.company_id;
+                command.Parameters.Add(parameter);
+
+                parameter = new QC.SqlParameter("@company_name", System.Data.SqlDbType.NVarChar, 255);
+                parameter.Value = device.company_name;
                 command.Parameters.Add(parameter);
 
                 parameter = new QC.SqlParameter("@serial_number", System.Data.SqlDbType.VarChar, 50);
@@ -224,17 +418,17 @@ namespace TelemetryGenerator
                 command.CommandType = System.Data.CommandType.Text;
                 command.CommandText = @"
                     Insert into dim_device_telemetry
-                        ( device_type_name, device_type_id, inspect_type_id, inspect_type_code, inspect_type_name, inspect_type_unit, 
+                        (id, device_type_name, device_type_id, inspect_type_id, inspect_type_code, inspect_type_name, inspect_type_unit, 
                          standard, yellow_lower_bound, yellow_upper_bound, red_lower_bound, red_upper_bound)
                     Values
-                        ( @device_type_name, @device_type_id, @inspect_type_id, @inspect_type_code, @inspect_type_name, @inspect_type_unit, 
+                        (@id, @device_type_name, @device_type_id, @inspect_type_id, @inspect_type_code, @inspect_type_name, @inspect_type_unit, 
                          @standard, @yellow_lower_bound, @yellow_upper_bound, @red_lower_bound, @red_upper_bound
                          );";
-                /*
+                
                 parameter = new QC.SqlParameter("@id", System.Data.SqlDbType.Int);
                 parameter.Value = tele.id;
                 command.Parameters.Add(parameter);
-                */
+                
 
                 parameter = new QC.SqlParameter("@device_type_name", System.Data.SqlDbType.NVarChar, 50);
                 parameter.Value = tele.device_type_name;
@@ -408,6 +602,8 @@ namespace TelemetryGenerator
                     try
                     {
                         bulkCopy.WriteToServer(resultRows);
+
+                        Console.WriteLine("---Wrote {0} rows to table {1}", resultRows.Length, tableName);
                     }catch(Exception e)
                     {
                         Console.WriteLine("======!!!failed to write bulk data to table {0}. Error: {1}", 

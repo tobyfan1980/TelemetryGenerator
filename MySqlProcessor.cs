@@ -4,15 +4,27 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace TelemetryGenerator
 {
     class MySqlProcessor
     {
-        public string connectionString = "server=139.196.240.232;user=lixie;password=123456;port=3306;database=inspect";
+        private string connectionString;
 
-        public void ReadDevices()
+        public MySqlProcessor()
         {
+            connectionString = "server=139.196.240.232;user=lixie;password=123456;port=3306;database=inspect";
+        }
+        public MySqlProcessor(string server_ip, string username, string password, string database)
+        {
+
+            connectionString = string.Format("server={0};user={1};password={2};port=3306;database={3}",
+                server_ip, username, password, database);
+        }
+        public DataRow[] ReadDevices()
+        {
+            DataTable device_table = DataHelper.MakeDeviceTable();
             try
             {
                 MySqlConnection conn = new MySqlConnection(connectionString);
@@ -28,86 +40,165 @@ namespace TelemetryGenerator
 
                 }
                 mysqlReader.Close();
+
+                device_table.AcceptChanges();
+                return device_table.Select();
             }
             catch (Exception sql_excp)
             {
                 Console.WriteLine("My sql exception: {0}", sql_excp.ToString());
+                return null;
             }
         }
 
-        public void ReadAlert()
+        /// <summary>
+        /// read one day alert result
+        /// </summary>
+        /// <param name="cut_date"></param>
+        /// <param name="skip"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public DataRow[] ReadAlert(DateTime cut_date, long skip=0, int limit=1000)
         {
+            DataTable alert_tble = DataHelper.MakeAlertTable();
+            DateTime next_day = cut_date + new TimeSpan(1, 0, 0, 0);
+            string cut_date_str = string.Format("{0}-{1}-{2}", cut_date.Year, cut_date.Month, cut_date.Day);
+            string next_day_str = string.Format("{0}-{1}-{2}", next_day.Year, next_day.Month, next_day.Day);
             try
             {
                 MySqlConnection conn = new MySqlConnection(connectionString);
                 conn.Open();
-                string command = @"SELECT a.id, a.device_id, d.type_id 'device_type_id',
+                DateTime before_sql_command = DateTime.Now;
+                string command = string.Format( @"SELECT a.id, a.device_id, d.type_id 'device_type_id',
 dt.name 'device_type_name',
 c.id 'company_id', c.name 'company_name',
 a.inspect_type_id 'device_telemetry_id', a.alert_type,
-a.alert_num 'consecutive_alert_count', a.create_date 'create_time', a.finish_date 'end_time'
+a.alert_num 'consecutive_alert_count', a.create_date 'start_time', a.finish_date 'end_time'
 FROM alert_count a
-left join device as d on a.device_id=d.id
-left join device_type as dt on d.type_id=dt.id
-left join company as c on dt.company_id=c.id
-order by a.device_id, a.inspect_Type_id, a.create_date;";
+left JOIN device as d on a.device_id=d.id
+left JOIN device_type as dt on d.type_id=dt.id
+left JOIN company as c on dt.company_id=c.id
+where (a.create_date BETWEEN '{0}' AND '{1}') limit {2},{3};", cut_date_str, next_day_str, skip, limit);
                 MySqlCommand sqlCommand = new MySqlCommand(command, conn);
                 MySqlDataReader mysqlReader = sqlCommand.ExecuteReader();
+                DateTime after_sql_command = DateTime.Now;
+                var columns = new List<string>();
+                for (int i = 0; i < mysqlReader.FieldCount; i++)
+                {
+                    columns.Add(mysqlReader.GetName(i));
+                }
                 while (mysqlReader.Read())
                 {
                     Console.WriteLine("Get device {0} - {1} - {2} - {3}",
                         mysqlReader["id"], mysqlReader["device_type_id"],
-                        mysqlReader["create_time"], mysqlReader["end_time"]);
+                        mysqlReader["start_time"], mysqlReader["end_time"]);
 
+                    DataRow alert_row = alert_tble.NewRow();
+                    foreach(string column_name in columns)
+                    {
+                        alert_row[column_name] = mysqlReader[column_name];
+                    }
+                    alert_tble.Rows.Add(alert_row);
                 }
                 mysqlReader.Close();
+                alert_tble.AcceptChanges();
+
+                DateTime after_read_to_daterows = DateTime.Now;
+
+                Console.WriteLine("Executing sql query takes: {0}", (after_sql_command - before_sql_command).TotalSeconds);
+                Console.WriteLine("Reading sql query data to alert rows takes: {0}", (after_read_to_daterows - after_sql_command).TotalSeconds);
+
+
+                return alert_tble.Select();
             }
             catch (Exception sql_excp)
             {
-                Console.WriteLine("My sql exception: {0}", sql_excp.ToString());
+                Console.WriteLine("Read alert failed. My sql exception: {0}", sql_excp.ToString());
+                return null;
             }
         }
-        public void ReadMonitorResult()
+
+        /// <summary>
+        /// read one day monitor result
+        /// </summary>
+        /// <param name="cut_date"></param>
+        /// <param name="skip"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        public DataRow[] ReadMonitorResult(DateTime cut_date, long skip=0, int limit=1000)
         {
+            DataTable monitor_result_tbl = DataHelper.MakeMonitorResultTable();
+            DateTime next_day = cut_date + new TimeSpan(1, 0, 0, 0);
+            string cut_date_str = string.Format("{0}-{1}-{2}", cut_date.Year, cut_date.Month, cut_date.Day);
+            string next_day_str = string.Format("{0}-{1}-{2}", next_day.Year, next_day.Month, next_day.Day);
             try
             {
                 MySqlConnection conn = new MySqlConnection(connectionString);
                 conn.Open();
-                string command = @"select id.id, id.device_id, d.type_id 'device_type_id',
+
+                DateTime before_sql_command = DateTime.Now;
+
+                string command = string.Format(@"select id.id, id.device_id, d.type_id 'device_type_id',
 dt.name 'device_type_name',
 id.device_inspect_id 'device_telemetry_id', c.id 'company_id', c.name 'company_name',
 id.create_date 'create_time', id.result
 from inspect_data as id
-left join device as d on id.device_id=d.id
-left join device_type as dt on d.type_id=dt.id
-left join company as c on dt.company_id=c.id
-where id.create_date>='2016-10-20' limit 5,10;";
+left JOIN device as d on id.device_id=d.id
+left JOIN device_type as dt on d.type_id=dt.id
+left JOIN company as c on dt.company_id=c.id
+where (id.create_date BETWEEN '{0}' AND '{1}') limit {2},{3};", cut_date_str, next_day_str, skip, limit);
                 MySqlCommand sqlCommand = new MySqlCommand(command, conn);
                 MySqlDataReader mysqlReader = sqlCommand.ExecuteReader();
+
+                DateTime after_sql_command = DateTime.Now;
+
+                var columns = new List<string>();
+                for (int i = 0; i < mysqlReader.FieldCount; i++)
+                {
+                    columns.Add(mysqlReader.GetName(i));
+                }
                 while (mysqlReader.Read())
                 {
                     Console.WriteLine("Get device {0} - {1} - {2} - {3}",
                         mysqlReader["id"], mysqlReader["device_type_id"],
                         mysqlReader["create_time"], mysqlReader["result"]);
 
+                    DataRow mr_row = monitor_result_tbl.NewRow();
+                    foreach(string column_name in columns)
+                    {
+                        mr_row[column_name] = mysqlReader[column_name];
+                    }
+
+                    monitor_result_tbl.Rows.Add(mr_row);
                 }
                 mysqlReader.Close();
+                monitor_result_tbl.AcceptChanges();
+
+                DateTime after_read_to_datarows = DateTime.Now;
+
+                Console.WriteLine("Executing sql query takes: {0}", (after_sql_command - before_sql_command).TotalSeconds);
+                Console.WriteLine("Read query data to monitor results rows is: {0}", (after_read_to_datarows - after_sql_command).TotalSeconds);
+
+
+                return monitor_result_tbl.Select();
             }
             catch (Exception sql_excp)
             {
-                Console.WriteLine("My sql exception: {0}", sql_excp.ToString());
+                Console.WriteLine("Read monitor result failed. My sql exception: {0}", sql_excp.ToString());
+                return null;
             }
         }
 
-        public void ReadDimDevice()
+        public DataRow[] ReadDimDevice()
         {
+            DataTable device_tbl = DataHelper.MakeDeviceTable();
             try
             {
                 MySqlConnection conn = new MySqlConnection(connectionString);
                 conn.Open();
-                string command = @"select d.id 'device_id', d.name 'device_name', d.code 'device_sn',
-d.model 'device_model', d.create_date, d.purchase_date,
-dt.id 'device_type_id', dt.name 'device_type_name',
+                string command = @"select d.id 'device_id', d.name 'device_name', d.code 'serial_number',
+d.model 'model', d.create_date, d.purchase_date,
+dt.id 'type_id', dt.name 'type_name',
 c.id 'company_id', c.name 'company_name', c.id 'company_id', b.id 'building_id', b.name 'building_name',
 f.id 'floor_id', f.name 'floor_name', r.id 'room_id', r.name 'room_name',
 m.number 'control', m.online_status 'control_online_status', m.battery_status 'control_battery_status'
@@ -126,23 +217,40 @@ left
 join monitor_device as m on d.id = m.device_id; ";
                 MySqlCommand sqlCommand = new MySqlCommand(command, conn);
                 MySqlDataReader mysqlReader = sqlCommand.ExecuteReader();
+                var columns = new List<string>();
+                for(int i=0; i<mysqlReader.FieldCount; i++)
+                {
+                    columns.Add(mysqlReader.GetName(i));
+                }
                 while (mysqlReader.Read())
                 {
                     Console.WriteLine("Get device {0} - {1} - {2} - {3}",
                         mysqlReader["device_id"], mysqlReader["device_name"],
-                        mysqlReader["device_sn"], mysqlReader["device_model"]);
+                        mysqlReader["serial_number"], mysqlReader["model"]);
 
+                    DataRow device_row = device_tbl.NewRow();
+                    foreach(string column_name in columns)
+                    {
+                        device_row[column_name] = mysqlReader[column_name];
+                    }
+
+                    device_tbl.Rows.Add(device_row);
                 }
                 mysqlReader.Close();
+
+                device_tbl.AcceptChanges();
+                return device_tbl.Select();
             }
             catch (Exception sql_excp)
             {
-                Console.WriteLine("My sql exception: {0}", sql_excp.ToString());
+                Console.WriteLine("Read device from mysql failed. My sql exception: {0}", sql_excp.ToString());
+                return null;
             }
         }
 
-        public void ReadDeviceTelemetry()
+        public DataRow[] ReadDeviceTelemetry()
         {
+            DataTable device_telemetry_tbl = DataHelper.MakeDeviceTelemetryTable();
             try
             {
                 MySqlConnection conn = new MySqlConnection(connectionString);
@@ -160,18 +268,37 @@ left join inspect_type as it on dti.inspect_type_id=it.id;
 ";
                 MySqlCommand sqlCommand = new MySqlCommand(command, conn);
                 MySqlDataReader mysqlReader = sqlCommand.ExecuteReader();
+                var columns = new List<string>();
+                for (int i = 0; i < mysqlReader.FieldCount; i++)
+                {
+                    columns.Add(mysqlReader.GetName(i));
+                }
                 while (mysqlReader.Read())
                 {
                     Console.WriteLine("Get device telemetry {0} - {1} - {2} - {3}",
                         mysqlReader["id"], mysqlReader["device_type_id"],
                         mysqlReader["inspect_type_id"], mysqlReader["inspect_type_code"]);
 
+                    DataRow dt_row = device_telemetry_tbl.NewRow();
+
+                    foreach(string column_name in columns)
+                    {
+                        dt_row[column_name] = mysqlReader[column_name];
+                    }
+
+                    device_telemetry_tbl.Rows.Add(dt_row);
+
                 }
+
                 mysqlReader.Close();
+                device_telemetry_tbl.AcceptChanges();
+
+                return device_telemetry_tbl.Select();
             }
             catch (Exception sql_excp)
             {
-                Console.WriteLine("My sql exception: {0}", sql_excp.ToString());
+                Console.WriteLine("Read device telemetry type from mysql failed. My sql exception: {0}", sql_excp.ToString());
+                return null;
             }
         }
 
