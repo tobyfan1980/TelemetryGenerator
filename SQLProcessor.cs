@@ -13,12 +13,12 @@ namespace TelemetryGenerator
         string db_server;
         string db_name;
         string connection_string;
-        public SQLProcessor(string sql_server, string sql_db, string username, string password)
+        public SQLProcessor(string sql_server, string domain, string sql_db, string username, string password)
         {
             db_server = sql_server;
             db_name = sql_db;
-            connection_string = string.Format("Server=tcp:{0}.database.windows.net,1433;Initial Catalog={1};Persist Security Info=False;User ID={2};Password={3};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
-                db_server, db_name, username, password);
+            connection_string = string.Format("Server=tcp:{0}.database.{4},1433;Initial Catalog={1};Persist Security Info=False;User ID={2};Password={3};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+                db_server, db_name, username, password, domain);
         }
 
         public void CleanupIntelabDB()
@@ -49,8 +49,16 @@ namespace TelemetryGenerator
 
             ExecuteSqlCommandNonQuery("drop table dim_device_telemetry");
             ExecuteSqlCommandNonQuery("drop table dim_device");
+            ExecuteSqlCommandNonQuery("drop table dim_alert");
 
             // create table
+
+            string create_table_dim_alert =
+                @"create table dim_alert(
+alert_type int not null primary key,
+alert_name nvarchar(50));";
+
+            // create table 
             string create_table_dim_device =
                 @"create table dim_device(
 device_id bigint not null primary key,
@@ -112,7 +120,7 @@ device_id bigint not null foreign key references dim_device(device_id),
 device_type_id int not null,
 device_type_name nvarchar(50),
 device_telemetry_id int not null foreign key references dim_device_telemetry(id),
-alert_type int,
+alert_type int not null foreign key references dim_alert(alert_type),
 consecutive_alert_count int,
 start_time datetime,
 end_time datetime,
@@ -127,7 +135,7 @@ device_id bigint not null foreign key references dim_device(device_id),
 device_type_id int not null,
 device_type_name nvarchar(50),
 device_telemetry_id int not null foreign key references dim_device_telemetry(id),
-alert_type int,
+alert_type int not null foreign key references dim_alert(alert_type),
 alert_count int,
 create_date date,
 result float,
@@ -146,6 +154,7 @@ result float,
 company_id int,
 company_name nvarchar(50)); ";
 
+            ExecuteSqlCommandNonQuery(create_table_dim_alert);
             ExecuteSqlCommandNonQuery(create_table_dim_device);
             ExecuteSqlCommandNonQuery(create_table_dim_device_telemetry);
             ExecuteSqlCommandNonQuery(create_table_fact_monitor_result);
@@ -387,6 +396,28 @@ company_name nvarchar(50)); ";
 
         }
 
+
+        public void WriteAlertTypes(List<AlertType> alert_list)
+        {
+            using (var connection = new QC.SqlConnection(connection_string))
+            {
+                connection.Open();
+                Console.Out.WriteLine("Connected to SQL server");
+
+                foreach (AlertType alert in alert_list)
+                {
+                    try
+                    {
+                        WriteOneAlertType(connection, alert);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Failed to write alert type {1}. {0}", e.ToString(), alert.alert_name);
+                    }
+                }
+            }
+        }
+
         public void WriteDeviceTelemetries(List<TelemetryInspect> tele_list)
         {
 
@@ -403,7 +434,7 @@ company_name nvarchar(50)); ";
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("Failed to write device. {0}", e.ToString());
+                        Console.WriteLine("Failed to write device telemetry. {0}", e.ToString());
                     }
                 }
             }
@@ -480,7 +511,39 @@ company_name nvarchar(50)); ";
             }
 
         }
-         
+
+        public void WriteOneAlertType(QC.SqlConnection connection, AlertType alert)
+        {
+            QC.SqlParameter parameter;
+            using (var command = new QC.SqlCommand())
+            {
+                command.Connection = connection;
+                command.CommandType = System.Data.CommandType.Text;
+                command.CommandText = @"
+                    Insert into dim_alert
+                        (alert_type,alert_name)
+                    Values
+                        (@alert_type, @alert_name
+                         );";
+
+                parameter = new QC.SqlParameter("@alert_type", System.Data.SqlDbType.Int);
+                parameter.Value = alert.alert_type;
+                command.Parameters.Add(parameter);
+
+
+                parameter = new QC.SqlParameter("@alert_name", System.Data.SqlDbType.NVarChar, 50);
+                parameter.Value = alert.alert_name;
+                command.Parameters.Add(parameter);
+
+               
+
+                command.ExecuteScalar();
+
+                Console.WriteLine("Insert alert to DB: {0}", alert.toString());
+            }
+
+        }
+
 
         public List<DimDevice> readDevices(int skip, int limit)
         {

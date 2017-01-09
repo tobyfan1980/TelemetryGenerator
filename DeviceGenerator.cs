@@ -49,13 +49,15 @@ namespace TelemetryGenerator
 
         public void initialize()
         {
+            int ratio = 2;
+
             DeviceType fridge = new DeviceType();
             fridge.name = "冰箱";
             fridge.models = new string[2]{ "Thermo", "Haier"};
             fridge.sn_prefix_by_model = new string[2] { "Thermo-1-", "Haier-1-" };
             fridge.type_id = 1;
             //fridge.number_by_model = new int[2] { 60, 40};
-            fridge.number_by_model = new int[2] { 6 * 2, 4 * 2 };
+            fridge.number_by_model = new int[2] { 7 * ratio, 4 * ratio };
             device_types.Add(fridge);
 
             DeviceType peiyang = new DeviceType();
@@ -64,7 +66,7 @@ namespace TelemetryGenerator
             peiyang.sn_prefix_by_model = new string[2] { "Thermo-2-", "Binder-2-" };
             peiyang.type_id = 2;
             //peiyang.number_by_model = new int[2] { 25, 30 };
-            peiyang.number_by_model = new int[2] { 2 * 2, 3 * 2 };
+            peiyang.number_by_model = new int[2] { 3 * ratio, 3 * ratio };
             device_types.Add(peiyang);
 
             DeviceType jiejing = new DeviceType();
@@ -73,7 +75,7 @@ namespace TelemetryGenerator
             jiejing.sn_prefix_by_model = new string[1] { "Newshine-3-"};
             jiejing.type_id = 3;
            // jiejing.number_by_model = new int[1] {20 };
-            jiejing.number_by_model = new int[1] { 2 * 2 };
+            jiejing.number_by_model = new int[1] { 3 * ratio };
             device_types.Add(jiejing);
 
             DeviceType tongfeng = new DeviceType();
@@ -82,7 +84,7 @@ namespace TelemetryGenerator
             tongfeng.sn_prefix_by_model = new string[1] { "Newshine-4-" };
             tongfeng.type_id = 4;
             //tongfeng.number_by_model = new int[1] { 40 };
-            tongfeng.number_by_model = new int[1] { 4 * 2 };
+            tongfeng.number_by_model = new int[1] { 4 * ratio };
             device_types.Add(tongfeng);
 
             Company c_a = new Company();
@@ -138,8 +140,8 @@ namespace TelemetryGenerator
             companies.Add(c_2);
 
             create_dates.Add(new DateTime(2016, 7, 16));
-            create_dates.Add(new DateTime(2016, 8, 21));
-            create_dates.Add(new DateTime(2016, 8, 6));
+            create_dates.Add(new DateTime(2016, 7, 21));
+            create_dates.Add(new DateTime(2016, 7, 6));
 
             purchase_dates.Add(new DateTime(2016, 5, 1));
             purchase_dates.Add(new DateTime(2016, 6, 1));

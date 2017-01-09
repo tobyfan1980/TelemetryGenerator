@@ -10,7 +10,7 @@ namespace TelemetryGenerator
 
     class SqlDataTransfer
     {
-        SQLProcessor proc_sqlserver = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
+        SQLProcessor proc_sqlserver = new SQLProcessor("intelab-db", "windows.net", "intelab-vm-production", "superadmin", "intelab-2016");
 
         MySqlProcessor proc_mysql = new MySqlProcessor();
         void AddResultsToDailyAverage(

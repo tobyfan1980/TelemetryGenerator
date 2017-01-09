@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MathNet.Numerics.Distributions;
 
 namespace TelemetryGenerator
 {
@@ -52,8 +53,16 @@ namespace TelemetryGenerator
             Random rd = new Random(seed);
             float v = start_value;
 
-            int total_yellow_count = (int)(count * yellow_prob);
-            int total_red_count = (int)(count * red_prob);
+            // assuming yellow and red alert rate of devices follows a normal distribution with mean = given rate and sd = give_rate/4
+
+            double yellow_rate = Math.Max(yellow_prob/4, Normal.Sample(yellow_prob, yellow_prob / 4));
+            double red_rate = Math.Max(red_prob/4, Normal.Sample(red_prob, red_prob / 4));
+           
+            // red_rate must be at most 1/2 yellow rate
+            red_rate = Math.Min(yellow_rate / 2, red_rate);
+
+            int total_yellow_count = (int)(count * yellow_rate);
+            int total_red_count = (int)(count * red_rate);
 
             int[] yellow_alert_time = new int[total_yellow_count];
             int[] red_alert_time = new int[total_red_count];

@@ -10,3 +10,6 @@ D:\GitHub\TelemetryGenerator\bin\Debug\TelemetryGenerator.pdb
 D:\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.csprojResolveAssemblyReference.cache
 D:\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.exe
 D:\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.pdb
+D:\GitHub\TelemetryGenerator\bin\Debug\MySql.Data.dll
+D:\GitHub\TelemetryGenerator\bin\Debug\MathNet.Numerics.dll
+D:\GitHub\TelemetryGenerator\bin\Debug\MathNet.Numerics.xml

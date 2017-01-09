@@ -6,6 +6,22 @@ using System.Threading.Tasks;
 
 namespace TelemetryGenerator
 {
+    struct AlertType
+    {
+        public int alert_type;
+        public string alert_name;
+
+        public AlertType(int type, string name)
+        {
+            this.alert_type = type;
+            this.alert_name = name;
+        }
+
+        public string toString()
+        {
+            return string.Format("alert--name: {0}, type {1}", alert_name, alert_type);
+        }
+    }
     class TelemetryInspect
     {
         private int _id;
