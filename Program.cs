@@ -118,6 +118,7 @@ namespace TelemetryGenerator
             //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
 
             proc.InitializeIntelabDB(addAllMonitorResults);
+            proc.SaveAlertTypes();
         }
 
         static void CleanupDB(SQLProcessor proc)

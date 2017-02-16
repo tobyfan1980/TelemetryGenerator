@@ -13,6 +13,8 @@ namespace TelemetryGenerator
         string db_server;
         string db_name;
         string connection_string;
+        public List<AlertType> alert_types = new List<AlertType>();
+
         public SQLProcessor(string sql_server, string domain, string sql_db, string username, string password)
         {
             db_server = sql_server;
@@ -40,6 +42,14 @@ namespace TelemetryGenerator
             ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
         }
 
+        public void SaveAlertTypes()
+        {
+            alert_types.Add(new AlertType(1, "黄色警报"));
+            alert_types.Add(new AlertType(2, "红色警报"));
+
+            WriteAlertTypes(alert_types);
+        }
+
         public void InitializeIntelabDB(bool addAllMonitorResult)
         {
             ExecuteSqlCommandNonQuery("drop table fact_monitor_result_daily_average");
@@ -47,9 +57,11 @@ namespace TelemetryGenerator
             ExecuteSqlCommandNonQuery("drop table fact_alert");
             ExecuteSqlCommandNonQuery("drop table fact_alert_daily_sum");
 
+
             ExecuteSqlCommandNonQuery("drop table dim_device_telemetry");
             ExecuteSqlCommandNonQuery("drop table dim_device");
             ExecuteSqlCommandNonQuery("drop table dim_alert");
+            ExecuteSqlCommandNonQuery("drop table dim_monitor_type");
             ExecuteSqlCommandNonQuery("drop table webjob_run_record");
 
             // create table
@@ -63,6 +75,13 @@ job_end_time datetime,
 monitor_data_added bigint,
 alert_data_added bigint,
 retry int);";
+
+            string create_table_dim_monitor_type =
+                @"create table dim_monitor_type(
+id int not null primary key,
+name nvarchar(64),
+code varchar(64),
+unit nvarchar(64));";
 
             string create_table_dim_alert =
                 @"create table dim_alert(
@@ -124,6 +143,8 @@ result float,
 company_id int,
 company_name nvarchar(50)); ";
 
+            /*
+            // with compnay
             string create_table_fact_alert =
                 @"create table fact_alert(
 id bigint not null identity(1,1) primary key,
@@ -139,6 +160,23 @@ result float,
 company_id int,
 company_name nvarchar(50)); ";
 
+*/
+            string create_table_fact_alert =
+                            @"create table fact_alert(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+monitor_type_id int not null foreign key references dim_monitor_type(id),
+alert_type int not null foreign key references dim_alert(alert_type),
+consecutive_alert_count int,
+start_time datetime,
+end_time datetime,
+result float); ";
+
+            //without company
+            /* 
+            //with company 
             string create_table_fact_alert_daily_sum =
                 @"create table fact_alert_daily_sum(
 id bigint not null identity(1,1) primary key,
@@ -148,11 +186,28 @@ device_type_name nvarchar(50),
 device_telemetry_id int not null foreign key references dim_device_telemetry(id),
 alert_type int not null foreign key references dim_alert(alert_type),
 alert_count int,
-create_date date NOT NULL UNIQUE,
+create_date date NOT NULL,
 result float,
 company_id int,
 company_name nvarchar(50)); ";
+*/
 
+            // without company
+            string create_table_fact_alert_daily_sum =
+                            @"create table fact_alert_daily_sum(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+monitor_type_id int not null foreign key references dim_monitor_type(id),
+alert_type int not null foreign key references dim_alert(alert_type),
+alert_count int,
+create_date date NOT NULL,
+result float,
+CONSTRAINT device_alert_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_id, alert_type, create_date)); ";
+
+            /*
+           //with company
             string create_table_fact_monitor_result_daily_average =
                @"create table fact_monitor_result_daily_average(
 id bigint not null identity(1,1) primary key,
@@ -160,11 +215,25 @@ device_id bigint not null foreign key references dim_device(device_id),
 device_type_id int not null,
 device_type_name nvarchar(50),
 device_telemetry_id int not null foreign key references dim_device_telemetry(id),
-create_date date NOT NULL UNIQUE,
+create_date date NOT NULL,
 result float,
 company_id int,
 company_name nvarchar(50)); ";
+*/
 
+            //without company
+            string create_table_fact_monitor_result_daily_average =
+   @"create table fact_monitor_result_daily_average(
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+device_type_id int not null,
+device_type_name nvarchar(50),
+device_telemetry_id int not null foreign key references dim_device_telemetry(id),
+create_date date NOT NULL,
+result float,
+CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, device_telemetry_id, create_date)); ";
+
+            ExecuteSqlCommandNonQuery(create_table_dim_monitor_type);
             ExecuteSqlCommandNonQuery(create_table_dim_alert);
             ExecuteSqlCommandNonQuery(create_table_dim_device);
             ExecuteSqlCommandNonQuery(create_table_dim_device_telemetry);

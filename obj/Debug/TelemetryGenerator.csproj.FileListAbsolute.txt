@@ -13,3 +13,13 @@ D:\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.pdb
 D:\GitHub\TelemetryGenerator\bin\Debug\MySql.Data.dll
 D:\GitHub\TelemetryGenerator\bin\Debug\MathNet.Numerics.dll
 D:\GitHub\TelemetryGenerator\bin\Debug\MathNet.Numerics.xml
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\TelemetryGenerator.exe.config
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.exe
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.pdb
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\TelemetryGenerator.exe
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\TelemetryGenerator.pdb
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\MathNet.Numerics.dll
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\MySql.Data.dll
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\MathNet.Numerics.xml
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\bin\Debug\MySql.Data.xml
+C:\Users\toby_\Documents\GitHub\TelemetryGenerator\obj\Debug\TelemetryGenerator.csprojResolveAssemblyReference.cache
