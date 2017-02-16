@@ -53,7 +53,7 @@ namespace TelemetryGenerator
         public void InitializeIntelabDB(bool addAllMonitorResult)
         {
             ExecuteSqlCommandNonQuery("drop table fact_monitor_result_daily_average");
-            ExecuteSqlCommandNonQuery("drop table fact_monitor_result");
+            //ExecuteSqlCommandNonQuery("drop table fact_monitor_result");
             ExecuteSqlCommandNonQuery("drop table fact_alert");
             ExecuteSqlCommandNonQuery("drop table fact_alert_daily_sum");
 
