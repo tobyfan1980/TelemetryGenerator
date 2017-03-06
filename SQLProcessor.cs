@@ -40,7 +40,7 @@ namespace TelemetryGenerator
             ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
         }
 
-        public void InitializeIntelabDB()
+        public void InitializeIntelabDB(bool addAllMonitorResult)
         {
             ExecuteSqlCommandNonQuery("drop table fact_monitor_result_daily_average");
             ExecuteSqlCommandNonQuery("drop table fact_monitor_result");
@@ -50,8 +50,19 @@ namespace TelemetryGenerator
             ExecuteSqlCommandNonQuery("drop table dim_device_telemetry");
             ExecuteSqlCommandNonQuery("drop table dim_device");
             ExecuteSqlCommandNonQuery("drop table dim_alert");
+            ExecuteSqlCommandNonQuery("drop table webjob_run_record");
 
             // create table
+
+            string create_table_webjob_run_record =
+                @"create table webjob_run_record(
+id bigint not null identity(1, 1) primary key,
+monitor_data_date datetime NOT NULL UNIQUE,
+job_start_time datetime,
+job_end_time datetime,
+monitor_data_added bigint,
+alert_data_added bigint,
+retry int);";
 
             string create_table_dim_alert =
                 @"create table dim_alert(
@@ -137,7 +148,7 @@ device_type_name nvarchar(50),
 device_telemetry_id int not null foreign key references dim_device_telemetry(id),
 alert_type int not null foreign key references dim_alert(alert_type),
 alert_count int,
-create_date date,
+create_date date NOT NULL UNIQUE,
 result float,
 company_id int,
 company_name nvarchar(50)); ";
@@ -149,7 +160,7 @@ device_id bigint not null foreign key references dim_device(device_id),
 device_type_id int not null,
 device_type_name nvarchar(50),
 device_telemetry_id int not null foreign key references dim_device_telemetry(id),
-create_date date,
+create_date date NOT NULL UNIQUE,
 result float,
 company_id int,
 company_name nvarchar(50)); ";
@@ -157,13 +168,16 @@ company_name nvarchar(50)); ";
             ExecuteSqlCommandNonQuery(create_table_dim_alert);
             ExecuteSqlCommandNonQuery(create_table_dim_device);
             ExecuteSqlCommandNonQuery(create_table_dim_device_telemetry);
-            ExecuteSqlCommandNonQuery(create_table_fact_monitor_result);
+            if (addAllMonitorResult)
+            {
+                ExecuteSqlCommandNonQuery(create_table_fact_monitor_result);
+            }
             ExecuteSqlCommandNonQuery(create_table_fact_alert);
             ExecuteSqlCommandNonQuery(create_table_fact_monitor_result_daily_average);
             ExecuteSqlCommandNonQuery(create_table_fact_alert_daily_sum);
+            ExecuteSqlCommandNonQuery(create_table_webjob_run_record);
         }
-
-
+        
         public void ExecuteSqlCommandNonQuery(string cmdStr)
         {
             Console.WriteLine("Executing SQL command {0}", cmdStr);

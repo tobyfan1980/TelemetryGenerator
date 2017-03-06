@@ -66,7 +66,7 @@ namespace TelemetryGenerator
         static void GenerateResultsDB(SQLProcessor proc)
         {
             // create simulator with yellow alert rate 0.01 (1 alert per 500 min), red alert rate 0.002
-            Simulator sim = new Simulator(1.0f / 250, 1.0f / 1000);
+            Simulator sim = new Simulator(1.0f / 500, 1.0f / 2000);
             sim.sql_process = proc;
             int skip = 0;
 
@@ -77,7 +77,7 @@ namespace TelemetryGenerator
                 foreach (DimDevice device in device_list)
                 {
                     // generate data will 5 minutes interval and save only latest 2 days telemetry data in fact_monitor_result table
-                    sim.GenerateMonitorResultPerDevice(device, new DateTime(2016, 9, 1), new DateTime(2016, 12, 31,23,0,0), 5, 2);
+                    sim.GenerateMonitorResultPerDevice(device, new DateTime(2016, 11, 18), new DateTime(2017, 1, 25,23,0,0), 5, 2);
                 }
 
                 if(device_list.Count < 10)
@@ -111,13 +111,13 @@ namespace TelemetryGenerator
         }
 
 
-        static void InitializeDB(SQLProcessor proc)
+        static void InitializeDB(SQLProcessor proc, bool addAllMonitorResults)
         {
             //SQLProcessor proc = new SQLProcessor("intelab-demo", "intelab-demo", "superadmin", "intelab-2016");
             //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
             //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-db", "superadmin", "intelab-2016");
 
-            proc.InitializeIntelabDB();
+            proc.InitializeIntelabDB(addAllMonitorResults);
         }
 
         static void CleanupDB(SQLProcessor proc)
@@ -134,12 +134,19 @@ namespace TelemetryGenerator
             proc.CleanupFactTable();
         }
 
-        
+        static void TestSQLImportData()
+        {
+            SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "intelab-test", "superadmin", "intelab-2016");
+
+            string cmd1 = "select count(*) from tobytest.student";
+
+            proc.ExecuteSqlCommandCountQuery(cmd1);
+        }
 
         static void TestRunSQLcommand()
         {
             //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
-            SQLProcessor proc = new SQLProcessor("intelab-db", "windows.net", "intelab-db", "superadmin", "intelab-2016");
+            SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "toby-test", "superadmin", "intelab-2016");
             string cmd1 = "Alter table fact_monitor_result add company_id int null";
            
             //proc.ExecuteSqlCommandNonQuery(cmdsetcompanyname2);
@@ -154,10 +161,11 @@ namespace TelemetryGenerator
             string cmdinsert = "update dim_alert set alert_name='red' where alert_type=2";
             //proc.ExecuteSqlCommandCountQuery(cmdcreate);
             //proc.ExecuteSqlCommandCountQuery(cmdForeignkey);
-            proc.ExecuteSqlCommandNonQuery(cmdinsert);
+            // proc.ExecuteSqlCommandNonQuery(cmdinsert);
             //proc.ExecuteSqlCommandCountByGroup(cmdcount);
+            long count = proc.ExecuteSqlCommandCountQuery(cmdcount);
 
-
+            System.Console.WriteLine(count);
         }
 
         static void DailySqlTransfer()
@@ -166,17 +174,24 @@ namespace TelemetryGenerator
             sqlTrans.TransferFromMysqlToSqlserver();
         }
 
-        static void Bootstrap()
+        static SQLProcessor Bootstrap()
         {
-            SQLProcessor proc = new SQLProcessor("intelab-demo", "chinacloudapi.cn", "intelab-demo", "superadmin", "intelab-2016");
-           // SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "toby-test", "superadmin", "intelab-2016");
-            InitializeDB(proc);
+           // SQLProcessor proc = new SQLProcessor("intelab-demo", "chinacloudapi.cn", "intelab-demo", "superadmin", "intelab-2016");
+            SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "intelab-report-toby", "superadmin", "intelab-2016");
+            InitializeDB(proc, false);
+            return proc;
+        }
+
+        static void GenerateDemoData(SQLProcessor proc)
+        {
             GenerateDeviceAndTelemetry(proc);
             GenerateResultsDB(proc);
         }
 
         static void Main(string[] args)
         {
+            string intelab = System.Environment.GetEnvironmentVariable("INTELAB_ENV");
+            System.Console.Out.WriteLine(intelab);
             //GenerateDeviceAndTelemetry();
             //testDeviceRead();
             //testSaveTelemetries();
@@ -198,8 +213,11 @@ namespace TelemetryGenerator
             //CleanupFactTables();
             //DailySqlTransfer();
 
-            Bootstrap();
+            SQLProcessor proc = Bootstrap();
+            //GenerateDemoData(proc);
 
+
+            //TestSQLImportData();
             Console.Out.WriteLine("finished==============");
             Console.In.ReadLine();
         }
