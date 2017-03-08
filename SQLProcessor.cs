@@ -228,10 +228,10 @@ id bigint not null identity(1,1) primary key,
 device_id bigint not null foreign key references dim_device(device_id),
 device_type_id int not null,
 device_type_name nvarchar(50),
-device_telemetry_id int not null foreign key references dim_device_telemetry(id),
+monitor_type_id int not null foreign key references dim_monitor_type(id),
 create_date date NOT NULL,
 result float,
-CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, device_telemetry_id, create_date)); ";
+CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_id, create_date)); ";
 
             ExecuteSqlCommandNonQuery(create_table_dim_monitor_type);
             ExecuteSqlCommandNonQuery(create_table_dim_alert);
