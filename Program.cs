@@ -177,8 +177,9 @@ namespace TelemetryGenerator
 
         static SQLProcessor Bootstrap()
         {
-           // SQLProcessor proc = new SQLProcessor("intelab-demo", "chinacloudapi.cn", "intelab-demo", "superadmin", "intelab-2016");
-            SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "intelab-report-toby", "superadmin", "intelab-2016");
+            SQLProcessor proc = new SQLProcessor("ils-deploy-db", "chinacloudapi.cn", "ils-deploy-powerbi-report", "ilabservice", "shipu@123");
+            //SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
+            //SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "intelab-report-toby", "superadmin", "intelab-2016");
             InitializeDB(proc, false);
             return proc;
         }
