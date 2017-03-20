@@ -52,6 +52,8 @@ namespace TelemetryGenerator
 
         public void InitializeIntelabDB(bool addAllMonitorResult)
         {
+            ExecuteSqlCommandNonQuery("drop table fact_utilization");
+
             ExecuteSqlCommandNonQuery("drop table fact_monitor_result_daily_average");
             //ExecuteSqlCommandNonQuery("drop table fact_monitor_result");
             ExecuteSqlCommandNonQuery("drop table fact_alert");
@@ -63,8 +65,9 @@ namespace TelemetryGenerator
             ExecuteSqlCommandNonQuery("drop table dim_alert");
             ExecuteSqlCommandNonQuery("drop table dim_monitor_type");
             ExecuteSqlCommandNonQuery("drop table webjob_run_record");
-
             // create table
+
+
 
             string create_table_webjob_run_record =
                 @"create table webjob_run_record(
@@ -236,6 +239,16 @@ create_date date NOT NULL,
 result float,
 CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_id, create_date)); ";
 
+            string create_table_fact_daily_utilization =
+    @"create table fact_utilization (
+id bigint not null identity(1,1) primary key,
+device_id bigint not null foreign key references dim_device(device_id),
+date datetime not null,
+running_time float,
+idle_time float,
+consumed_energy,
+utilization float);";
+
             ExecuteSqlCommandNonQuery(create_table_dim_monitor_type);
             ExecuteSqlCommandNonQuery(create_table_dim_alert);
             ExecuteSqlCommandNonQuery(create_table_dim_device);
@@ -247,6 +260,7 @@ CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_i
             ExecuteSqlCommandNonQuery(create_table_fact_alert);
             ExecuteSqlCommandNonQuery(create_table_fact_monitor_result_daily_average);
             ExecuteSqlCommandNonQuery(create_table_fact_alert_daily_sum);
+            ExecuteSqlCommandNonQuery(create_table_fact_daily_utilization);
             ExecuteSqlCommandNonQuery(create_table_webjob_run_record);
         }
         
