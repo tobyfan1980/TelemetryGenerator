@@ -204,9 +204,16 @@ CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_i
     @"create table fact_utilization_daily (
 id bigint not null identity(1,1) primary key,
 device_id bigint not null foreign key references dim_device(device_id),
+device_name nvarchar(50),
+device_type nvarchar(50), 
 create_date datetime not null,
-running_time float,
-idle_time float,
+running_time int,
+idle_time int,
+poweroff_time int,
+total_hours int,
+utilization float,
+power_lower_bound float,
+power_upper_bound float,
 consumed_energy float,
 CONSTRAINT AK_Device_Date UNIQUE(device_id, create_date));";
 

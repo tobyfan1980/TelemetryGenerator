@@ -472,8 +472,15 @@ namespace TelemetryGenerator
             device_id_col.DataType = System.Type.GetType("System.Int64");
             daily_utilization_table.Columns.Add(device_id_col);
 
+            DataColumn device_type_col = new DataColumn();
+            device_type_col.ColumnName = "device_type";
+            device_type_col.AutoIncrement = false;
+            device_type_col.DataType = System.Type.GetType("System.String");
+            daily_utilization_table.Columns.Add(device_type_col);
+
+
             DataColumn time_col = new DataColumn();
-            time_col.ColumnName = "date";
+            time_col.ColumnName = "create_date";
             time_col.DataType = System.Type.GetType("System.DateTime");
             daily_utilization_table.Columns.Add(time_col);
 
@@ -487,6 +494,18 @@ namespace TelemetryGenerator
             idle_time_col.ColumnName = "idle_time";
             idle_time_col.DataType = System.Type.GetType("System.Double");
             daily_utilization_table.Columns.Add(idle_time_col);
+
+            DataColumn poweroff_time_col = new DataColumn();
+            poweroff_time_col.ColumnName = "poweroff_time";
+            poweroff_time_col.AutoIncrement = false;
+            poweroff_time_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(device_id_col);
+
+            DataColumn total_hours_col = new DataColumn();
+            total_hours_col.ColumnName = "total_hours";
+            total_hours_col.AutoIncrement = false;
+            total_hours_col.DataType = System.Type.GetType("System.Int32");
+
 
             DataColumn consumed_energy_col = new DataColumn();
             consumed_energy_col.ColumnName = "consumed_energy";
