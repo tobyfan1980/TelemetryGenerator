@@ -15,60 +15,20 @@ namespace TelemetryGenerator
         string connection_string;
         public List<AlertType> alert_types = new List<AlertType>();
 
+        Dictionary<string, string> create_table_cmds = new Dictionary<string, string>();
+
         public SQLProcessor(string sql_server, string domain, string sql_db, string username, string password)
         {
             db_server = sql_server;
             db_name = sql_db;
             connection_string = string.Format("Server=tcp:{0}.database.{4},1433;Initial Catalog={1};Persist Security Info=False;User ID={2};Password={3};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
                 db_server, db_name, username, password, domain);
+
+            InitCreateCommands();
         }
 
-        public void CleanupIntelabDB()
-        {
-            ExecuteSqlCommandNonQuery("delete from fact_monitor_result_daily_average");
-            ExecuteSqlCommandNonQuery("delete from fact_monitor_result");
-            ExecuteSqlCommandNonQuery("delete from fact_alert");
-            ExecuteSqlCommandNonQuery("delete from dim_device_telemetry");
-            ExecuteSqlCommandNonQuery("delete from dim_device");
-            ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
-
-        }
-
-        public void CleanupFactTable()
-        {
-            ExecuteSqlCommandNonQuery("delete from fact_monitor_result_daily_average");
-            ExecuteSqlCommandNonQuery("delete from fact_monitor_result");
-            ExecuteSqlCommandNonQuery("delete from fact_alert");
-            ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
-        }
-
-        public void SaveAlertTypes()
-        {
-            alert_types.Add(new AlertType(1, "黄色警报"));
-            alert_types.Add(new AlertType(2, "红色警报"));
-
-            WriteAlertTypes(alert_types);
-        }
-
-        public void InitializeIntelabDB(bool addAllMonitorResult)
-        {
-            ExecuteSqlCommandNonQuery("drop table fact_utilization");
-
-            ExecuteSqlCommandNonQuery("drop table fact_monitor_result_daily_average");
-            //ExecuteSqlCommandNonQuery("drop table fact_monitor_result");
-            ExecuteSqlCommandNonQuery("drop table fact_alert");
-            ExecuteSqlCommandNonQuery("drop table fact_alert_daily_sum");
-
-
-            ExecuteSqlCommandNonQuery("drop table dim_device_telemetry");
-            ExecuteSqlCommandNonQuery("drop table dim_device");
-            ExecuteSqlCommandNonQuery("drop table dim_alert");
-            ExecuteSqlCommandNonQuery("drop table dim_monitor_type");
-            ExecuteSqlCommandNonQuery("drop table webjob_run_record");
-            // create table
-
-
-
+        public void InitCreateCommands()
+        {   
             string create_table_webjob_run_record =
                 @"create table webjob_run_record(
 id bigint not null identity(1, 1) primary key,
@@ -77,6 +37,7 @@ job_start_time datetime,
 job_end_time datetime,
 monitor_data_added bigint,
 alert_data_added bigint,
+utilization_data_added bigint,
 retry int);";
 
             string create_table_dim_monitor_type =
@@ -239,29 +200,103 @@ create_date date NOT NULL,
 result float,
 CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_id, create_date)); ";
 
-            string create_table_fact_daily_utilization =
-    @"create table fact_utilization (
+            string create_table_fact_utilization_daily =
+    @"create table fact_utilization_daily (
 id bigint not null identity(1,1) primary key,
 device_id bigint not null foreign key references dim_device(device_id),
 date datetime not null,
 running_time float,
 idle_time float,
-consumed_energy,
-utilization float);";
+consumed_energy float);";
 
-            ExecuteSqlCommandNonQuery(create_table_dim_monitor_type);
-            ExecuteSqlCommandNonQuery(create_table_dim_alert);
-            ExecuteSqlCommandNonQuery(create_table_dim_device);
-            ExecuteSqlCommandNonQuery(create_table_dim_device_telemetry);
+            create_table_cmds.Add("fact_utilization_daily", create_table_fact_utilization_daily);
+            create_table_cmds.Add("fact_alert", create_table_fact_alert);
+            create_table_cmds.Add("fact_alert_daily_sum", create_table_fact_alert_daily_sum);
+            create_table_cmds.Add("fact_monitor_result_daily_average", create_table_fact_monitor_result_daily_average);
+            create_table_cmds.Add("dim_device", create_table_dim_device);
+            create_table_cmds.Add("dim_alert", create_table_dim_alert);
+            create_table_cmds.Add("dim_device_telemetry", create_table_dim_device_telemetry);
+            create_table_cmds.Add("dim_monitor_type", create_table_dim_monitor_type);
+            create_table_cmds.Add("fact_monitor_results", create_table_fact_monitor_result);
+            create_table_cmds.Add("webjob_run_record", create_table_webjob_run_record);
+
+        }
+
+        public void createTable(string tableName)
+        {
+            ExecuteSqlCommandNonQuery(create_table_cmds[tableName]);
+        }
+
+        public void CleanupIntelabDB()
+        {
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result_daily_average");
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result");
+            ExecuteSqlCommandNonQuery("delete from fact_alert");
+            ExecuteSqlCommandNonQuery("delete from dim_device_telemetry");
+            ExecuteSqlCommandNonQuery("delete from dim_device");
+            ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
+
+        }
+
+        public void CleanupFactTable()
+        {
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result_daily_average");
+            ExecuteSqlCommandNonQuery("delete from fact_monitor_result");
+            ExecuteSqlCommandNonQuery("delete from fact_alert");
+            ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
+            ExecuteSqlCommandNonQuery("delete from fact_utilization_daily");
+        }
+
+        public void SaveAlertTypes()
+        {
+            alert_types.Add(new AlertType(1, "黄色警报"));
+            alert_types.Add(new AlertType(2, "红色警报"));
+
+            WriteAlertTypes(alert_types);
+        }
+
+
+        public void InitilizeTable(string tableName)
+        {
+            string drop_cmd = "drop table " + tableName;
+
+            ExecuteSqlCommandNonQuery(drop_cmd);
+
+            createTable(tableName);
+        }
+
+        
+        public void CleanupDimTable()
+        {
+            ExecuteSqlCommandNonQuery("drop table dim_device_telemetry");
+            ExecuteSqlCommandNonQuery("drop table dim_device");
+            ExecuteSqlCommandNonQuery("drop table dim_alert");
+            ExecuteSqlCommandNonQuery("drop table dim_monitor_type");
+            
+        }
+        public void InitializeIntelabDB(bool addAllMonitorResult)
+        {
+            CleanupFactTable();
+            CleanupDimTable();
+
+            ExecuteSqlCommandNonQuery("drop table webjob_run_record");
+
+            // create table
+            createTable("dim_monitor_type");
+            createTable("dim_device");
+            createTable("dim_alert");
+            createTable("dim_device_telemetry");
+
             if (addAllMonitorResult)
             {
-                ExecuteSqlCommandNonQuery(create_table_fact_monitor_result);
+                createTable("fact_monitor_result");
             }
-            ExecuteSqlCommandNonQuery(create_table_fact_alert);
-            ExecuteSqlCommandNonQuery(create_table_fact_monitor_result_daily_average);
-            ExecuteSqlCommandNonQuery(create_table_fact_alert_daily_sum);
-            ExecuteSqlCommandNonQuery(create_table_fact_daily_utilization);
-            ExecuteSqlCommandNonQuery(create_table_webjob_run_record);
+            
+            createTable("fact_alert");
+            createTable("fact_monitor_result_daily_average");
+            createTable("fact_alert_daily_sum");
+            createTable("fact_daily_utilization");
+            createTable("webjob_run_record");
         }
         
         public void ExecuteSqlCommandNonQuery(string cmdStr)

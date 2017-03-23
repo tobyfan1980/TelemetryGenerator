@@ -147,8 +147,11 @@ namespace TelemetryGenerator
         static void TestRunSQLcommand()
         {
             //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
-            SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "toby-test", "superadmin", "intelab-2016");
-            string cmd1 = "Alter table fact_monitor_result add company_id int null";
+            SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
+
+            //SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
+            //SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "toby-test", "superadmin", "intelab-2016");
+            string cmd1 = "Alter table webjob_run_record add utilization_data_added bigint not null default 0";
            
             //proc.ExecuteSqlCommandNonQuery(cmdsetcompanyname2);
 
@@ -160,13 +163,17 @@ namespace TelemetryGenerator
             string cmdcreate = "create table dim_alert (alert_type int not null primary key, alert_name nvarchar(20))";
             string cmdForeignkey = "alter table fact_alert_daily_sum add foreign key (alert_type) references dim_alert (alert_type)";
             string cmdinsert = "update dim_alert set alert_name='red' where alert_type=2";
+
+            proc.InitilizeTable("fact_utilization_daily");
+
+
             //proc.ExecuteSqlCommandCountQuery(cmdcreate);
             //proc.ExecuteSqlCommandCountQuery(cmdForeignkey);
-            // proc.ExecuteSqlCommandNonQuery(cmdinsert);
+            //proc.ExecuteSqlCommandNonQuery(cmd1);
             //proc.ExecuteSqlCommandCountByGroup(cmdcount);
-            long count = proc.ExecuteSqlCommandCountQuery(cmdcount);
+            //long count = proc.ExecuteSqlCommandCountQuery(cmdcount);
 
-            System.Console.WriteLine(count);
+            System.Console.WriteLine();
         }
 
         static void DailySqlTransfer()
@@ -216,10 +223,10 @@ namespace TelemetryGenerator
             //CleanupFactTables();
             //DailySqlTransfer();
 
-            SQLProcessor proc = Bootstrap();
+            //SQLProcessor proc = Bootstrap();
             //GenerateDemoData(proc);
 
-
+            TestRunSQLcommand();
             //TestSQLImportData();
             Console.Out.WriteLine("finished==============");
             Console.In.ReadLine();

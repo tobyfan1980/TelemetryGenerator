@@ -455,5 +455,47 @@ namespace TelemetryGenerator
 
             return monitor_result_avg_tbl;
         }
+
+        public static DataTable MakeDailyUtilizationTable()
+        {
+            DataTable daily_utilization_table = new DataTable("daily_utilization");
+
+            DataColumn result_id_col = new DataColumn();
+            result_id_col.ColumnName = "id";
+            result_id_col.AutoIncrement = true;
+            result_id_col.DataType = System.Type.GetType("System.Int64");
+            daily_utilization_table.Columns.Add(result_id_col);
+
+            DataColumn device_id_col = new DataColumn();
+            device_id_col.ColumnName = "device_id";
+            device_id_col.AutoIncrement = false;
+            device_id_col.DataType = System.Type.GetType("System.Int64");
+            daily_utilization_table.Columns.Add(device_id_col);
+
+            DataColumn time_col = new DataColumn();
+            time_col.ColumnName = "date";
+            time_col.DataType = System.Type.GetType("System.DateTime");
+            daily_utilization_table.Columns.Add(time_col);
+
+
+            DataColumn running_time_col = new DataColumn();
+            running_time_col.ColumnName = "running_time";
+            running_time_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(running_time_col);
+
+            DataColumn idle_time_col = new DataColumn();
+            idle_time_col.ColumnName = "idle_time";
+            idle_time_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(idle_time_col);
+
+            DataColumn consumed_energy_col = new DataColumn();
+            consumed_energy_col.ColumnName = "consumed_energy";
+            consumed_energy_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(consumed_energy_col);
+
+
+           
+            return daily_utilization_table;
+        }
     }
 }
