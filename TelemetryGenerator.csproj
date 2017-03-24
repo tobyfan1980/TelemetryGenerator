@@ -60,7 +60,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Simulator.cs" />
-    <Compile Include="SqlDataTransfer.cs" />
     <Compile Include="SQLProcessor.cs" />
     <Compile Include="TelemetryInspect.cs" />
   </ItemGroup>

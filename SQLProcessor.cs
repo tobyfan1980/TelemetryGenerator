@@ -204,10 +204,11 @@ CONSTRAINT device_monitor_per_day UNIQUE NONCLUSTERED (device_id, monitor_type_i
     @"create table fact_utilization_daily (
 id bigint not null identity(1,1) primary key,
 device_id bigint not null foreign key references dim_device(device_id),
-date datetime not null,
+create_date datetime not null,
 running_time float,
 idle_time float,
-consumed_energy float);";
+consumed_energy float,
+CONSTRAINT AK_Device_Date UNIQUE(device_id, create_date));";
 
             create_table_cmds.Add("fact_utilization_daily", create_table_fact_utilization_daily);
             create_table_cmds.Add("fact_alert", create_table_fact_alert);
