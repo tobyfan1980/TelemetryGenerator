@@ -147,9 +147,9 @@ namespace TelemetryGenerator
         static void TestRunSQLcommand()
         {
             //SQLProcessor proc = new SQLProcessor("intelab-db", "intelab-vm-production", "superadmin", "intelab-2016");
-            //SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
+            SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
 
-            SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
+            //SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
             //SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "toby-test", "superadmin", "intelab-2016");
             string cmd1 = "Alter table webjob_run_record add utilization_data_added bigint not null default 0";
            
@@ -166,7 +166,7 @@ namespace TelemetryGenerator
 
             proc.InitilizeTable("fact_utilization_daily");
 
-            // proc.InitilizeTable("webjob_run_record");
+            //proc.InitilizeTable("webjob_run_record");
 
 
             //proc.ExecuteSqlCommandCountQuery(cmdcreate);
@@ -185,9 +185,9 @@ namespace TelemetryGenerator
         static SQLProcessor Bootstrap()
         {
             //SQLProcessor proc = new SQLProcessor("ils-deploy-db", "chinacloudapi.cn", "ils-deploy-powerbi-report", "ilabservice", "shipu@123");
-            //SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
+            SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
             //SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "intelab-report-toby", "superadmin", "intelab-2016");
-            SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
+            //SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
             InitializeDB(proc, false);
             return proc;
         }
