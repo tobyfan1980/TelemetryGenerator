@@ -32,13 +32,15 @@ namespace TelemetryGenerator
             string create_table_webjob_run_record =
                 @"create table webjob_run_record(
 id bigint not null identity(1, 1) primary key,
-monitor_data_date datetime NOT NULL UNIQUE,
+monitor_data_date datetime NOT NULL,
+timezone int not null default(8),
 job_start_time datetime,
 job_end_time datetime,
 monitor_data_added bigint,
 alert_data_added bigint,
 utilization_data_added bigint,
-retry int);";
+retry int,
+CONSTRAINT UC_date UNIQUE (monitor_data_date,timezone));";
 
             string create_table_dim_monitor_type =
                 @"create table dim_monitor_type(
@@ -227,7 +229,7 @@ CONSTRAINT AK_Device_Date UNIQUE(device_id, create_date));";
             create_table_cmds.Add("dim_monitor_type", create_table_dim_monitor_type);
             create_table_cmds.Add("fact_monitor_results", create_table_fact_monitor_result);
             create_table_cmds.Add("webjob_run_record", create_table_webjob_run_record);
-
+            create_table_cmds.Add("fact_daily_utilization", create_table_fact_utilization_daily);
         }
 
         public void createTable(string tableName)
@@ -253,6 +255,12 @@ CONSTRAINT AK_Device_Date UNIQUE(device_id, create_date));";
             ExecuteSqlCommandNonQuery("delete from fact_alert");
             ExecuteSqlCommandNonQuery("delete from fact_alert_daily_sum");
             ExecuteSqlCommandNonQuery("delete from fact_utilization_daily");
+
+            ExecuteSqlCommandNonQuery("drop table  fact_monitor_result_daily_average");
+            ExecuteSqlCommandNonQuery("drop table  fact_monitor_result");
+            ExecuteSqlCommandNonQuery("drop table  fact_alert");
+            ExecuteSqlCommandNonQuery("drop table  fact_alert_daily_sum");
+            ExecuteSqlCommandNonQuery("drop table  fact_utilization_daily");
         }
 
         public void SaveAlertTypes()
@@ -305,6 +313,45 @@ CONSTRAINT AK_Device_Date UNIQUE(device_id, create_date));";
             createTable("fact_alert_daily_sum");
             createTable("fact_daily_utilization");
             createTable("webjob_run_record");
+        }
+
+        public void ExecuteSqlCommandQuery(string cmdStr)
+        {
+            Console.WriteLine("Executing SQL command {0}", cmdStr);
+            using (var connection = new QC.SqlConnection(connection_string))
+            {
+                try
+                {
+                    connection.Open();
+                    using (var command = new QC.SqlCommand())
+                    {
+                        command.Connection = connection;
+                        command.CommandType = System.Data.CommandType.Text;
+                        command.CommandText = cmdStr;
+                        try
+                        {
+                            
+                            QC.SqlDataReader reader = command.ExecuteReader();
+                            while (reader.Read())
+                            {
+                                Console.WriteLine("\t{0}\t{1}\t{2}",
+                                    reader[0], reader[1], reader[2]);
+                            }
+                            reader.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+
+                    }
+
+                }
+                catch (Exception expt)
+                {
+                    Console.WriteLine("executing sql cmd failed: {0}", expt.ToString());
+                }
+            }
         }
         
         public void ExecuteSqlCommandNonQuery(string cmdStr)

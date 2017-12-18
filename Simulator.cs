@@ -186,7 +186,8 @@ namespace TelemetryGenerator
                 dataRow["create_time"] = result_time;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_type_name"] = device.type_name;
-                dataRow["device_telemetry_id"] = telemetry_inspect.id;
+                dataRow["monitor_type_id"] = telemetry_inspect.inspect_type_id;
+                dataRow["monitor_type_name"] = telemetry_inspect.inspect_type_name;
                 dataRow["result"] = report.data[i];
                 dataRow["company_id"] = device.company_id;
 
@@ -231,7 +232,8 @@ namespace TelemetryGenerator
                 dataRow["device_id"] = device.id;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_type_name"] = device.type_name;
-                dataRow["device_telemetry_id"] = tele_inspect.id ;
+                dataRow["monitor_type_id"] = tele_inspect.inspect_type_id ;
+                dataRow["monitor_type_name"] = tele_inspect.inspect_type_name;
                 dataRow["start_time"] = result_time;
                 dataRow["end_time"] = result_time;
 
@@ -240,9 +242,7 @@ namespace TelemetryGenerator
                 dataRow["alert_type"] = 1;
                 
                 dataRow["consecutive_alert_count"] = alert_count(report.yellow_alert_index, i);
-                dataRow["company_id"] = device.company_id;
-                dataRow["company_name"] = device.company_name;
-
+                
                 monitor_alert_tbl.Rows.Add(dataRow);
 
                 //yellow alert dail sum
@@ -269,15 +269,14 @@ namespace TelemetryGenerator
                 alert_count_row["device_id"] = device.id;
                 alert_count_row["device_type_id"] = device.type_id;
                 alert_count_row["device_type_name"] = device.type_name;
-                alert_count_row["device_telemetry_id"] = tele_inspect.id;
+                alert_count_row["monitor_type_id"] = tele_inspect.inspect_type_id;
+                alert_count_row["monitor_type_name"] = tele_inspect.inspect_type_name;
                 alert_count_row["alert_type"] = 1;
                 alert_count_row["alert_count"] = alert_counts[i];
                 alert_count_row["create_date"] = startDate + new TimeSpan(i, 0, 0, 0) ;
                 alert_count_row["result"] = avg_alert_results[i];
 
-                alert_count_row["company_id"] = device.company_id;
-                alert_count_row["company_name"] = device.company_name;
-
+              
                 monitor_alert_daily_sum_tbl.Rows.Add(alert_count_row);
             }
 
@@ -292,14 +291,13 @@ namespace TelemetryGenerator
 
                 DataRow dataRow = monitor_alert_tbl.NewRow();
                 dataRow["device_id"] = device.id;
-                dataRow["company_id"] = device.company_id;
-                dataRow["company_name"] = device.company_name;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_type_name"] = device.type_name;
                 dataRow["start_time"] = result_time;
                 dataRow["end_time"] = result_time;
 
-                dataRow["device_telemetry_id"] = tele_inspect.id;
+                dataRow["monitor_type_id"] = tele_inspect.inspect_type_id;
+                dataRow["monitor_type_name"] = tele_inspect.inspect_type_name;
                 dataRow["result"] = report.data[report.red_alert_index[i]];
                 dataRow["alert_type"] = 2;
 
@@ -327,15 +325,14 @@ namespace TelemetryGenerator
                 alert_count_row["device_id"] = device.id;
                 alert_count_row["device_type_id"] = device.type_id;
                 alert_count_row["device_type_name"] = device.type_name;
-                alert_count_row["device_telemetry_id"] = tele_inspect.id;
+                alert_count_row["monitor_type_id"] = tele_inspect.inspect_type_id;
+                alert_count_row["monitor_type_name"] = tele_inspect.inspect_type_name;
                 alert_count_row["alert_type"] = 2;
                 alert_count_row["alert_count"] = alert_counts[i];
                 alert_count_row["create_date"] = startDate + new TimeSpan(i, 0, 0, 0);
                 alert_count_row["result"] = avg_alert_results[i];
 
-                alert_count_row["company_id"] = device.company_id;
-                alert_count_row["company_name"] = device.company_name;
-
+               
                 monitor_alert_daily_sum_tbl.Rows.Add(alert_count_row);
             }
             
@@ -392,10 +389,10 @@ namespace TelemetryGenerator
                     double average = agg_result / daily_samples;
                     DataRow dataRow = monitor_result_avg_tbl.NewRow();
                     dataRow["device_id"] = device.id;
-                    dataRow["company_id"] = device.company_id;
                     dataRow["device_type_id"] = device.type_id;
                     dataRow["device_type_name"] = device.type_name;
-                    dataRow["device_telemetry_id"] = tele_inspect.id;
+                    dataRow["monitor_type_id"] = tele_inspect.inspect_type_id;
+                    dataRow["monitor_type_name"] = tele_inspect.inspect_type_name;
                     dataRow["create_date"] = cur_date;
 
                     dataRow["result"] = average;
@@ -421,10 +418,10 @@ namespace TelemetryGenerator
                 double average = agg_result / daily_samples;
                 DataRow dataRow = monitor_result_avg_tbl.NewRow();
                 dataRow["device_id"] = device.id;
-                dataRow["company_id"] = device.company_id;
                 dataRow["device_type_id"] = device.type_id;
                 dataRow["device_type_name"] = device.type_name;
-                dataRow["device_telemetry_id"] = tele_inspect.id;
+                dataRow["monitor_type_id"] = tele_inspect.inspect_type_id;
+                dataRow["monitor_type_name"] = tele_inspect.inspect_type_name;
                 dataRow["create_date"] = cur_date;
 
                 dataRow["result"] = average;

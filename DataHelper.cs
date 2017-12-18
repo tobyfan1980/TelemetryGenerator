@@ -122,7 +122,7 @@ namespace TelemetryGenerator
 
             DataColumn control_battery_status_col = new DataColumn();
             control_battery_status_col.ColumnName = "control_battery_status";
-            control_battery_status_col.DataType = System.Type.GetType("System.Int32");
+            control_battery_status_col.DataType = System.Type.GetType("System.Double");
             device_tbl.Columns.Add(control_battery_status_col);
 
             DataColumn company_id_col = new DataColumn();
@@ -165,9 +165,14 @@ namespace TelemetryGenerator
             monitor_result_tbl.Columns.Add(device_type_name_col);
 
             DataColumn telemetry_type_id_col = new DataColumn();
-            telemetry_type_id_col.ColumnName = "device_telemetry_id";
+            telemetry_type_id_col.ColumnName = "monitor_type_id";
             telemetry_type_id_col.DataType = System.Type.GetType("System.Int32");
             monitor_result_tbl.Columns.Add(telemetry_type_id_col);
+
+            DataColumn monitor_type_name_col = new DataColumn();
+            monitor_type_name_col.ColumnName = "monitor_type_name";
+            monitor_type_name_col.DataType = System.Type.GetType("System.String");
+            monitor_result_tbl.Columns.Add(monitor_type_name_col);
 
 
             DataColumn time_col = new DataColumn();
@@ -215,7 +220,7 @@ namespace TelemetryGenerator
             device_type_id_col.DataType = System.Type.GetType("System.Int32");
             device_telemetry_tbl.Columns.Add(device_type_id_col);
 
-           
+
             DataColumn inspect_type_id_col = new DataColumn();
             inspect_type_id_col.ColumnName = "inspect_type_id";
             inspect_type_id_col.DataType = System.Type.GetType("System.Int32");
@@ -261,7 +266,7 @@ namespace TelemetryGenerator
             red_upper_bound_col.DataType = System.Type.GetType("System.Double");
             device_telemetry_tbl.Columns.Add(red_upper_bound_col);
 
-            
+
             return device_telemetry_tbl;
         }
 
@@ -291,10 +296,16 @@ namespace TelemetryGenerator
             device_type_name_col.DataType = System.Type.GetType("System.String");
             monitor_alert_daily_sum_tbl.Columns.Add(device_type_name_col);
 
-            DataColumn telemetry_type_id_col = new DataColumn();
-            telemetry_type_id_col.ColumnName = "device_telemetry_id";
-            telemetry_type_id_col.DataType = System.Type.GetType("System.Int32");
-            monitor_alert_daily_sum_tbl.Columns.Add(telemetry_type_id_col);
+            DataColumn monitor_type_id_col = new DataColumn();
+            monitor_type_id_col.ColumnName = "monitor_type_id";
+            monitor_type_id_col.DataType = System.Type.GetType("System.Int32");
+            monitor_alert_daily_sum_tbl.Columns.Add(monitor_type_id_col);
+
+
+            DataColumn monitor_type_name_col = new DataColumn();
+            monitor_type_name_col.ColumnName = "monitor_type_name";
+            monitor_type_name_col.DataType = System.Type.GetType("System.String");
+            monitor_alert_daily_sum_tbl.Columns.Add(monitor_type_name_col);
 
             DataColumn alert_type_col = new DataColumn();
             alert_type_col.ColumnName = "alert_type";
@@ -315,7 +326,7 @@ namespace TelemetryGenerator
             alert_result_col.ColumnName = "result";
             alert_result_col.DataType = System.Type.GetType("System.Double");// ? how to get float datatype
             monitor_alert_daily_sum_tbl.Columns.Add(alert_result_col);
-
+            /*
             DataColumn company_id_col = new DataColumn();
             company_id_col.ColumnName = "company_id";
             company_id_col.DataType = System.Type.GetType("System.Int32");
@@ -325,7 +336,7 @@ namespace TelemetryGenerator
             company_name_col.ColumnName = "company_name";
             company_name_col.DataType = System.Type.GetType("System.String");
             monitor_alert_daily_sum_tbl.Columns.Add(company_name_col);
-
+            */
             return monitor_alert_daily_sum_tbl;
         }
         public static DataTable MakeAlertTable()
@@ -354,10 +365,15 @@ namespace TelemetryGenerator
             device_type_name_col.DataType = System.Type.GetType("System.String");
             monitor_alert_tbl.Columns.Add(device_type_name_col);
 
-            DataColumn telemetry_type_id_col = new DataColumn();
-            telemetry_type_id_col.ColumnName = "device_telemetry_id";
-            telemetry_type_id_col.DataType = System.Type.GetType("System.Int32");
-            monitor_alert_tbl.Columns.Add(telemetry_type_id_col);
+            DataColumn monitor_type_id_col = new DataColumn();
+            monitor_type_id_col.ColumnName = "monitor_type_id";
+            monitor_type_id_col.DataType = System.Type.GetType("System.Int32");
+            monitor_alert_tbl.Columns.Add(monitor_type_id_col);
+
+            DataColumn monitor_type_name_col = new DataColumn();
+            monitor_type_name_col.ColumnName = "monitor_type_name";
+            monitor_type_name_col.DataType = System.Type.GetType("System.String");
+            monitor_alert_tbl.Columns.Add(monitor_type_name_col);
 
             DataColumn alert_type_col = new DataColumn();
             alert_type_col.ColumnName = "alert_type";
@@ -384,6 +400,7 @@ namespace TelemetryGenerator
             alert_result_col.DataType = System.Type.GetType("System.Double");// ? how to get float datatype
             monitor_alert_tbl.Columns.Add(alert_result_col);
 
+            /*
             DataColumn company_id_col = new DataColumn();
             company_id_col.ColumnName = "company_id";
             company_id_col.AutoIncrement = false;
@@ -395,8 +412,37 @@ namespace TelemetryGenerator
             company_name_col.AutoIncrement = false;
             company_name_col.DataType = System.Type.GetType("System.String");
             monitor_alert_tbl.Columns.Add(company_name_col);
-
+            */
             return monitor_alert_tbl;
+        }
+
+        public static DataTable MakeMonitorTypeTable()
+        {
+            DataTable monitor_type_tbl = new DataTable("monitor_type");
+
+            DataColumn type_id_col = new DataColumn();
+            type_id_col.ColumnName = "id";
+            type_id_col.DataType = System.Type.GetType("System.Int64");
+            monitor_type_tbl.Columns.Add(type_id_col);
+
+            DataColumn type_name_col = new DataColumn();
+            type_name_col.ColumnName = "name";
+            type_name_col.DataType = System.Type.GetType("System.String");
+            monitor_type_tbl.Columns.Add(type_name_col);
+
+
+            DataColumn type_code_col = new DataColumn();
+            type_code_col.ColumnName = "code";
+            type_code_col.DataType = System.Type.GetType("System.String");
+            monitor_type_tbl.Columns.Add(type_code_col);
+
+            DataColumn type_unit_col = new DataColumn();
+            type_unit_col.ColumnName = "unit";
+            type_unit_col.DataType = System.Type.GetType("System.String");
+            monitor_type_tbl.Columns.Add(type_unit_col);
+
+
+            return monitor_type_tbl;
         }
 
         public static DataTable MakeTelemetryAverageTable()
@@ -425,11 +471,15 @@ namespace TelemetryGenerator
             device_type_name_col.DataType = System.Type.GetType("System.String");
             monitor_result_avg_tbl.Columns.Add(device_type_name_col);
 
-            DataColumn telemetry_type_id_col = new DataColumn();
-            telemetry_type_id_col.ColumnName = "device_telemetry_id";
-            telemetry_type_id_col.DataType = System.Type.GetType("System.Int32");
-            monitor_result_avg_tbl.Columns.Add(telemetry_type_id_col);
+            DataColumn monitor_type_id_col = new DataColumn();
+            monitor_type_id_col.ColumnName = "monitor_type_id";
+            monitor_type_id_col.DataType = System.Type.GetType("System.Int32");
+            monitor_result_avg_tbl.Columns.Add(monitor_type_id_col);
 
+            DataColumn monitor_type_name_col = new DataColumn();
+            monitor_type_name_col.ColumnName = "monitor_type_name";
+            monitor_type_name_col.DataType = System.Type.GetType("System.String");
+            monitor_result_avg_tbl.Columns.Add(monitor_type_name_col);
 
             DataColumn time_col = new DataColumn();
             time_col.ColumnName = "create_date";
@@ -442,7 +492,7 @@ namespace TelemetryGenerator
             monitor_result.DataType = System.Type.GetType("System.Double");// ? how to get float datatype
             monitor_result_avg_tbl.Columns.Add(monitor_result);
 
-
+            /*
             DataColumn company_id_col = new DataColumn();
             company_id_col.ColumnName = "company_id";
             company_id_col.DataType = System.Type.GetType("System.Int32");
@@ -452,7 +502,7 @@ namespace TelemetryGenerator
             company_name_col.ColumnName = "company_name";
             company_name_col.DataType = System.Type.GetType("System.String");
             monitor_result_avg_tbl.Columns.Add(company_name_col);
-
+            */
             return monitor_result_avg_tbl;
         }
 
@@ -478,6 +528,11 @@ namespace TelemetryGenerator
             device_type_col.DataType = System.Type.GetType("System.String");
             daily_utilization_table.Columns.Add(device_type_col);
 
+            DataColumn device_name_col = new DataColumn();
+            device_name_col.ColumnName = "device_name";
+            device_name_col.AutoIncrement = false;
+            device_name_col.DataType = System.Type.GetType("System.String");
+            daily_utilization_table.Columns.Add(device_name_col);
 
             DataColumn time_col = new DataColumn();
             time_col.ColumnName = "create_date";
@@ -499,21 +554,34 @@ namespace TelemetryGenerator
             poweroff_time_col.ColumnName = "poweroff_time";
             poweroff_time_col.AutoIncrement = false;
             poweroff_time_col.DataType = System.Type.GetType("System.Double");
-            daily_utilization_table.Columns.Add(device_id_col);
+            daily_utilization_table.Columns.Add(poweroff_time_col);
 
             DataColumn total_hours_col = new DataColumn();
             total_hours_col.ColumnName = "total_hours";
             total_hours_col.AutoIncrement = false;
             total_hours_col.DataType = System.Type.GetType("System.Int32");
+            daily_utilization_table.Columns.Add(total_hours_col);
 
+            DataColumn utilization_col = new DataColumn();
+            utilization_col.ColumnName = "utilization";
+            utilization_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(utilization_col);
+
+            DataColumn power_lower_bound_col = new DataColumn();
+            power_lower_bound_col.ColumnName = "power_lower_bound";
+            power_lower_bound_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(power_lower_bound_col);
+
+            DataColumn power_upper_bound_col = new DataColumn();
+            power_upper_bound_col.ColumnName = "power_upper_bound";
+            power_upper_bound_col.DataType = System.Type.GetType("System.Double");
+            daily_utilization_table.Columns.Add(power_upper_bound_col);
 
             DataColumn consumed_energy_col = new DataColumn();
             consumed_energy_col.ColumnName = "consumed_energy";
             consumed_energy_col.DataType = System.Type.GetType("System.Double");
             daily_utilization_table.Columns.Add(consumed_energy_col);
 
-
-           
             return daily_utilization_table;
         }
     }

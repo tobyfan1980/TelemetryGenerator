@@ -77,7 +77,7 @@ namespace TelemetryGenerator
                 foreach (DimDevice device in device_list)
                 {
                     // generate data will 5 minutes interval and save only latest 2 days telemetry data in fact_monitor_result table
-                    sim.GenerateMonitorResultPerDevice(device, new DateTime(2016, 11, 18), new DateTime(2017, 1, 25,23,0,0), 5, 2);
+                    sim.GenerateMonitorResultPerDevice(device, new DateTime(2017, 1, 18), new DateTime(2017, 4, 19,23,0,0), 5, 2);
                 }
 
                 if(device_list.Count < 10)
@@ -152,9 +152,10 @@ namespace TelemetryGenerator
             //SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
             //SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "toby-test", "superadmin", "intelab-2016");
             string cmd1 = "Alter table webjob_run_record add utilization_data_added bigint not null default 0";
-           
+
             //proc.ExecuteSqlCommandNonQuery(cmdsetcompanyname2);
 
+            /*
             string cmdcount = "select count(*) from fact_alert";
             string cmdcount2 = "select count(*) as count, device_id from fact_monitor_result group by device_id";
             string cmdcount22 = "select count(*) as count, company_id from fact_monitor_result group by company_id";
@@ -163,20 +164,34 @@ namespace TelemetryGenerator
             string cmdcreate = "create table dim_alert (alert_type int not null primary key, alert_name nvarchar(20))";
             string cmdForeignkey = "alter table fact_alert_daily_sum add foreign key (alert_type) references dim_alert (alert_type)";
             string cmdinsert = "update dim_alert set alert_name='red' where alert_type=2";
+            */
 
-            proc.InitilizeTable("fact_utilization_daily");
+            string delete_alert = "delete from fact_alert where start_time >= '04/06/2017'";
+            string delete_alert_sum = "delete from fact_alert_daily_sum where create_date >= '04/06/2017'";
+            string delete_monitor_sum = "delete from fact_monitor_result_daily_average where create_date >= '04/06/2017'";
+            string delete_util = "delete from fact_utilization_daily where device_id=262";
+            string delete_webjob = "delete from webjob_run_record where monitor_data_date >= '04/06/2017'";
+
+            string select_utilization = "select device_id, device_name, device_type from fact_utilization_daily";
+
+            //proc.ExecuteSqlCommandNonQuery(delete_alert);
+            // proc.ExecuteSqlCommandNonQuery(delete_alert_sum);
+
+            //proc.ExecuteSqlCommandNonQuery(delete_monitor_sum);
+            //proc.ExecuteSqlCommandNonQuery(delete_util);
+            // proc.ExecuteSqlCommandNonQuery(delete_webjob);
+
+            //proc.InitilizeTable("fact_utilization_daily");
 
             //proc.InitilizeTable("webjob_run_record");
 
+            proc.ExecuteSqlCommandQuery(select_utilization);
 
             //proc.ExecuteSqlCommandCountQuery(cmdcreate);
             //proc.ExecuteSqlCommandCountQuery(cmdForeignkey);
             //proc.ExecuteSqlCommandNonQuery(cmd1);
             //proc.ExecuteSqlCommandCountByGroup(cmdcount);
             //long count = proc.ExecuteSqlCommandCountQuery(cmdcount);
-
-
-
 
             System.Console.WriteLine();
         }
@@ -185,8 +200,8 @@ namespace TelemetryGenerator
         static SQLProcessor Bootstrap()
         {
             //SQLProcessor proc = new SQLProcessor("ils-deploy-db", "chinacloudapi.cn", "ils-deploy-powerbi-report", "ilabservice", "shipu@123");
-            SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
-            //SQLProcessor proc = new SQLProcessor("toby-test", "windows.net", "intelab-report-toby", "superadmin", "intelab-2016");
+            //SQLProcessor proc = new SQLProcessor("ils-dev-db", "chinacloudapi.cn", "ils-dev-powerbi-report", "ilabservice", "shipu@123");
+            SQLProcessor proc = new SQLProcessor("ils-gxu", "windows.net", "ils-gxu-powerbi-report", "ilabservice", "shipu@123");
             //SQLProcessor proc = new SQLProcessor("ils-dev", "windows.net", "ils-dev-report", "ilabservice", "shipu@123");
             InitializeDB(proc, false);
             return proc;
@@ -214,7 +229,7 @@ namespace TelemetryGenerator
             //GenerateResultsDB();
 
             //TestMysql();
-            //TestRunSQLcommand();
+            TestRunSQLcommand();
             //InitializeDB();
             //CleanupDB();
 
@@ -223,10 +238,10 @@ namespace TelemetryGenerator
             //CleanupFactTables();
             //DailySqlTransfer();
 
-            //SQLProcessor proc = Bootstrap();
-            //GenerateDemoData(proc);
+ //         SQLProcessor proc = Bootstrap();
+ //           GenerateDemoData(proc);
 
-            TestRunSQLcommand();
+            //TestRunSQLcommand();
             //TestSQLImportData();
             Console.Out.WriteLine("finished==============");
             Console.In.ReadLine();
