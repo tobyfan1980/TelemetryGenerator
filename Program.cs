@@ -229,7 +229,7 @@ namespace TelemetryGenerator
             //GenerateResultsDB();
 
             //TestMysql();
-            TestRunSQLcommand();
+            //TestRunSQLcommand();
             //InitializeDB();
             //CleanupDB();
 
@@ -238,8 +238,8 @@ namespace TelemetryGenerator
             //CleanupFactTables();
             //DailySqlTransfer();
 
- //         SQLProcessor proc = Bootstrap();
- //           GenerateDemoData(proc);
+            SQLProcessor proc = Bootstrap();
+            GenerateDemoData(proc);
 
             //TestRunSQLcommand();
             //TestSQLImportData();
